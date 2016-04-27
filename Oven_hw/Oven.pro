@@ -1,6 +1,6 @@
-update=26.04.2016 4:29:32
+update=27.04.2016 0:53:24
 version=1
-last_client=kicad
+last_client=eeschema
 [pcbnew]
 version=1
 LastNetListRead=
@@ -39,3 +39,5 @@ LibName7=Power_kl
 LibName8=st_kl
 LibName9=Tittar_kl
 LibName10=Transistors_kl
+LibName11=adc_kl
+LibName12=display_kl

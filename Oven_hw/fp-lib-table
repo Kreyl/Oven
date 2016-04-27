@@ -1,0 +1,3 @@
+(fp_lib_table
+  (lib (name Connectors_kl)(type Legacy)(uri D:\Libs\Kicad\Connectors_kl.mod)(options "")(descr ""))
+)
