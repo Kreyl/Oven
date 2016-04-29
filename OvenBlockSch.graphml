@@ -19,7 +19,7 @@
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="67.0" width="68.0" x="689.0" y="358.0"/>
-          <y:Fill hasColor="false" transparent="false"/>
+          <y:Fill color="#FFCC99" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="custom" textColor="#000000" visible="true" width="31.328125" x="18.3359375" y="24.1494140625">MCU<y:LabelModel>
               <y:SmartNodeLabelModel distance="4.0"/>
@@ -73,7 +73,7 @@ conn<y:LabelModel>
       <data key="d5"/>
       <data key="d6">
         <y:ShapeNode>
-          <y:Geometry height="30.0" width="68.0" x="809.6959999999999" y="312.20400000000006"/>
+          <y:Geometry height="30.0" width="68.0" x="793.6959999999999" y="255.144"/>
           <y:Fill color="#FFCC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="custom" textColor="#000000" visible="true" width="44.693359375" x="11.6533203125" y="5.6494140625">Buttons<y:LabelModel>
@@ -91,7 +91,7 @@ conn<y:LabelModel>
       <data key="d5"/>
       <data key="d6">
         <y:ShapeNode>
-          <y:Geometry height="30.0" width="51.50400000000002" x="553.6960000000001" y="367.296"/>
+          <y:Geometry height="30.0" width="51.50400000000002" x="553.6960000000001" y="358.0"/>
           <y:Fill color="#FFCC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="custom" textColor="#000000" visible="true" width="36.009765625" x="7.747117187500066" y="5.6494140625">ADC1<y:LabelModel>
@@ -109,7 +109,7 @@ conn<y:LabelModel>
       <data key="d5"/>
       <data key="d6">
         <y:ShapeNode>
-          <y:Geometry height="30.0" width="51.50400000000002" x="553.6960000000001" y="407.952"/>
+          <y:Geometry height="30.0" width="51.50400000000002" x="553.6960000000001" y="398.656"/>
           <y:Fill color="#FFCC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="custom" textColor="#000000" visible="true" width="36.009765625" x="7.747117187499953" y="5.6494140625">ADC2<y:LabelModel>
@@ -145,7 +145,7 @@ conn<y:LabelModel>
       <data key="d5"/>
       <data key="d6">
         <y:ShapeNode>
-          <y:Geometry height="30.0" width="119.59999999999991" x="682.6480000000004" y="564.6800000000001"/>
+          <y:Geometry height="30.0" width="119.59999999999991" x="747.096" y="564.6800000000001"/>
           <y:Fill color="#FFCC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="custom" textColor="#000000" visible="true" width="109.029296875" x="5.2853515624999545" y="5.6494140625">PwrMCU: 5V-&gt;3.3V<y:LabelModel>
@@ -163,7 +163,7 @@ conn<y:LabelModel>
       <data key="d5"/>
       <data key="d6">
         <y:ShapeNode>
-          <y:Geometry height="30.0" width="119.59999999999991" x="682.6480000000004" y="610.3280000000001"/>
+          <y:Geometry height="30.0" width="119.59999999999991" x="747.096" y="610.3280000000001"/>
           <y:Fill color="#FFCC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="custom" textColor="#000000" visible="true" width="107.037109375" x="6.2814453124999545" y="5.6494140625">PwrADC: 5V-&gt;3.3V<y:LabelModel>
@@ -199,7 +199,7 @@ conn<y:LabelModel>
       <data key="d5"/>
       <data key="d6">
         <y:ShapeNode>
-          <y:Geometry height="30.0" width="58.15999999999997" x="594.4880000000004" y="587.72"/>
+          <y:Geometry height="30.0" width="58.15999999999997" x="585.5919999999998" y="587.72"/>
           <y:Fill color="#FFCC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="custom" textColor="#000000" visible="true" width="51.033203125" x="3.5633984374999272" y="5.6494140625">12V-&gt;5V<y:LabelModel>
@@ -274,7 +274,7 @@ conn<y:LabelModel>
       <data key="d5"/>
       <data key="d6">
         <y:ShapeNode>
-          <y:Geometry height="30.0" width="30.0" x="487.5919999999998" y="367.296"/>
+          <y:Geometry height="30.0" width="30.0" x="487.5919999999998" y="358.0"/>
           <y:Fill color="#CCFFCC" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" modelName="custom" textColor="#000000" visible="true" width="30.021484375" x="-0.0107421875" y="-1.701171875">RTD
@@ -293,11 +293,30 @@ conn<y:LabelModel>
       <data key="d5"/>
       <data key="d6">
         <y:ShapeNode>
-          <y:Geometry height="30.0" width="30.0" x="487.59199999999987" y="407.952"/>
+          <y:Geometry height="30.0" width="30.0" x="487.59199999999987" y="398.656"/>
           <y:Fill color="#CCFFCC" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" modelName="custom" textColor="#000000" visible="true" width="30.021484375" x="-0.0107421875" y="-1.701171875">RTD
 conn<y:LabelModel>
+              <y:SmartNodeLabelModel distance="4.0"/>
+            </y:LabelModel>
+            <y:ModelParameter>
+              <y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/>
+            </y:ModelParameter>
+          </y:NodeLabel>
+          <y:Shape type="rectangle"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="n16">
+      <data key="d5"/>
+      <data key="d6">
+        <y:ShapeNode>
+          <y:Geometry height="30.0" width="30.0" x="680.9280000000001" y="587.5040000000001"/>
+          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:BorderStyle color="#000000" type="line" width="1.0"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" hasText="false" height="4.0" modelName="custom" textColor="#000000" visible="true" width="4.0" x="13.0" y="13.0">
+            <y:LabelModel>
               <y:SmartNodeLabelModel distance="4.0"/>
             </y:LabelModel>
             <y:ModelParameter>
@@ -373,41 +392,15 @@ conn<y:LabelModel>
       <data key="d10">
         <y:ArcEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0">
-            <y:Point x="572.5799560546875" y="602.719970703125"/>
+            <y:Point x="568.1319580078125" y="602.719970703125"/>
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
-          <y:Arc height="-2.7685040549840778E-5" ratio="-1.0859432677534642E-6" type="fixedRatio"/>
+          <y:Arc height="-2.526990465412382E-5" ratio="-1.0859432677534642E-6" type="fixedRatio"/>
         </y:ArcEdge>
       </data>
     </edge>
-    <edge id="e7" source="n10" target="n7">
-      <data key="d9"/>
-      <data key="d10">
-        <y:ArcEdge>
-          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0">
-            <y:Point x="680.4251708984375" y="577.8734130859375"/>
-          </y:Path>
-          <y:LineStyle color="#000000" type="line" width="1.0"/>
-          <y:Arrows source="none" target="standard"/>
-          <y:Arc height="13.574490547180176" ratio="0.4484022259712219" type="fixedRatio"/>
-        </y:ArcEdge>
-      </data>
-    </edge>
-    <edge id="e8" source="n10" target="n8">
-      <data key="d9"/>
-      <data key="d10">
-        <y:ArcEdge>
-          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0">
-            <y:Point x="680.2906494140625" y="628.312744140625"/>
-          </y:Path>
-          <y:LineStyle color="#000000" type="line" width="1.0"/>
-          <y:Arrows source="none" target="standard"/>
-          <y:Arc height="-14.544841766357422" ratio="-0.48077887296676636" type="fixedRatio"/>
-        </y:ArcEdge>
-      </data>
-    </edge>
-    <edge id="e9" source="n0" target="n11">
+    <edge id="e7" source="n0" target="n11">
       <data key="d9"/>
       <data key="d10">
         <y:ArcEdge>
@@ -420,7 +413,7 @@ conn<y:LabelModel>
         </y:ArcEdge>
       </data>
     </edge>
-    <edge id="e10" source="n9" target="n11">
+    <edge id="e8" source="n9" target="n11">
       <data key="d9"/>
       <data key="d10">
         <y:ArcEdge>
@@ -433,7 +426,7 @@ conn<y:LabelModel>
         </y:ArcEdge>
       </data>
     </edge>
-    <edge id="e11" source="n11" target="n12">
+    <edge id="e9" source="n11" target="n12">
       <data key="d9"/>
       <data key="d10">
         <y:ArcEdge>
@@ -446,7 +439,7 @@ conn<y:LabelModel>
         </y:ArcEdge>
       </data>
     </edge>
-    <edge id="e12" source="n0" target="n13">
+    <edge id="e10" source="n0" target="n13">
       <data key="d9"/>
       <data key="d10">
         <y:ArcEdge>
@@ -459,12 +452,12 @@ conn<y:LabelModel>
         </y:ArcEdge>
       </data>
     </edge>
-    <edge id="e13" source="n14" target="n4">
+    <edge id="e11" source="n14" target="n4">
       <data key="d9"/>
       <data key="d10">
         <y:ArcEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0">
-            <y:Point x="541.02001953125" y="382.2959899902344"/>
+            <y:Point x="541.02001953125" y="373.0"/>
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
@@ -472,17 +465,72 @@ conn<y:LabelModel>
         </y:ArcEdge>
       </data>
     </edge>
-    <edge id="e14" source="n15" target="n5">
+    <edge id="e12" source="n15" target="n5">
       <data key="d9"/>
       <data key="d10">
         <y:ArcEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0">
-            <y:Point x="541.02001953125" y="422.9519958496094"/>
+            <y:Point x="541.02001953125" y="413.656005859375"/>
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
           <y:Arc height="-4.1569696804799605E-6" ratio="-2.1635112545936863E-7" type="fixedRatio"/>
         </y:ArcEdge>
+      </data>
+    </edge>
+    <edge id="e13" source="n10" target="n16">
+      <data key="d9"/>
+      <data key="d10">
+        <y:ArcEdge>
+          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0">
+            <y:Point x="655.2997436523438" y="602.5144653320312"/>
+          </y:Path>
+          <y:LineStyle color="#000000" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:Arc height="0.09751248359680176" ratio="0.0048002442345023155" type="fixedRatio"/>
+        </y:ArcEdge>
+      </data>
+    </edge>
+    <edge id="e14" source="n16" target="n7">
+      <data key="d9"/>
+      <data key="d10">
+        <y:ArcEdge>
+          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0">
+            <y:Point x="749.7645874023438" y="583.0825805664062"/>
+          </y:Path>
+          <y:LineStyle color="#000000" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:Arc height="8.17713451385498" ratio="0.288712739944458" type="fixedRatio"/>
+        </y:ArcEdge>
+      </data>
+    </edge>
+    <edge id="e15" source="n16" target="n8">
+      <data key="d9"/>
+      <data key="d10">
+        <y:ArcEdge>
+          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0">
+            <y:Point x="749.8616943359375" y="621.4533081054688"/>
+          </y:Path>
+          <y:LineStyle color="#000000" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:Arc height="-7.695091247558594" ratio="-0.2716931104660034" type="fixedRatio"/>
+        </y:ArcEdge>
+      </data>
+    </edge>
+    <edge id="e16" source="n1" target="n16">
+      <data key="d9"/>
+      <data key="d10">
+        <y:SplineEdge>
+          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0">
+            <y:Point x="470.3279999999999" y="389.92"/>
+            <y:Point x="470.3279999999999" y="464.32000000000005"/>
+            <y:Point x="447.12799999999993" y="625.3280000000001"/>
+            <y:Point x="538.328" y="662.72"/>
+            <y:Point x="667.1279999999999" y="643.7280000000002"/>
+          </y:Path>
+          <y:LineStyle color="#000000" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+        </y:SplineEdge>
       </data>
     </edge>
   </graph>
