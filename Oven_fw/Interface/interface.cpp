@@ -14,5 +14,5 @@ ILI9341_t Lcd;
 
 void Interface_t::Init() {
     Lcd.Init();
-    Lcd.Cls(clGreen);
+    Lcd.Cls(clBlack);
 }

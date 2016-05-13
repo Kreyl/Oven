@@ -21,6 +21,15 @@
 #define RdHi()   { PinSet(LCD_RD);    }
 #define RdLo()   { PinClear(LCD_RD);  }
 #define Write(Value) PortSetValue(LCD_DATA_GPIO, Value)
+
+/*
+#define WriteData(Data) { \
+    LCD_DATA_GPIO->ODR = Data; \
+    GPIOC->BRR = (1 << 5); \
+    GPIOC->BSRR = (1 << 5); \
+}
+*/
+
 #endif
 
 void ILI9341_t::Init() {
@@ -55,146 +64,33 @@ void ILI9341_t::Init() {
     // Row order etc.
     WriteCmd(0x36);
     WriteData(0xE8);    // MY, MX, Row/Column exchange, BGR
-
     // Pixel format
     WriteCmd(0x3A);
     WriteData(0x55);    // 16 bit both RGB & MCU
 
-    WriteCmd(0x09);
-    PortSetupInput(LCD_DATA_GPIO);
-    for(uint8_t i=0; i<4; i++) {
-        RdLo();
-        RdHi();
-        uint16_t r = LCD_DATA_GPIO->IDR;
-        Uart.Printf("Lcd: %X\r", r);
-    }
-    PortSetupOutput(LCD_DATA_GPIO);
-
-//    WriteCmd(0xCF);
-//    WriteData(0x00);
-//    WriteData(0xc3);
-//    WriteData(0X30);
-//
-//    WriteCmd(0xED);
-//    WriteData(0x64);
-//    WriteData(0x03);
-//    WriteData(0X12);
-//    WriteData(0X81);
-//
-//    WriteCmd(0xE8);
-//    WriteData(0x85);
-//    WriteData(0x10);
-//    WriteData(0x79);
-//
-//    WriteCmd(0xCB);
-//    WriteData(0x39);
-//    WriteData(0x2C);
-//    WriteData(0x00);
-//    WriteData(0x34);
-//    WriteData(0x02);
-//
-//    WriteCmd(0xF7);
-//    WriteData(0x20);
-//
-//    WriteCmd(0xEA);
-//    WriteData(0x00);
-//    WriteData(0x00);
-//
-//    WriteCmd(0xC0);    //Power control
-//    WriteData(0x22);   //VRH[5:0]
-//
-//    WriteCmd(0xC1);    //Power control
-//    WriteData(0x11);   //SAP[2:0];BT[3:0]
-//
-//    WriteCmd(0xC5);    //VCM control
-//    WriteData(0x3d);
-//    //LCD_DataWrite_ILI9341(0x30);
-//    WriteData(0x20);
-//
-//    WriteCmd(0xC7);    //VCM control2
-//    //LCD_DataWrite_ILI9341(0xBD);
-//    WriteData(0xAA); //0xB0
-//
-//    WriteCmd(0x36);    // Memory Access Control
-//    WriteData(0x08);
-//
-//    WriteCmd(0x3A);
-//    WriteData(0x55);
-//
-//    WriteCmd(0xB1);
-//    WriteData(0x00);
-//    WriteData(0x13);
-//
-//    WriteCmd(0xB6);    // Display Function Control
-//    WriteData(0x0A);
-//    WriteData(0xA2);
-//
-//    WriteCmd(0xF6);
-//    WriteData(0x01);
-//    WriteData(0x30);
-//
-//    WriteCmd(0xF2);    // 3Gamma Function Disable
-//    WriteData(0x00);
-//
-//    WriteCmd(0x26);    //Gamma curve selected
-//    WriteData(0x01);
-//
-//    WriteCmd(0xE0);    //Set Gamma
-//    WriteData(0x0F);
-//    WriteData(0x3F);
-//    WriteData(0x2F);
-//    WriteData(0x0C);
-//    WriteData(0x10);
-//    WriteData(0x0A);
-//    WriteData(0x53);
-//    WriteData(0XD5);
-//    WriteData(0x40);
-//    WriteData(0x0A);
-//    WriteData(0x13);
-//    WriteData(0x03);
-//    WriteData(0x08);
-//    WriteData(0x03);
-//    WriteData(0x00);
-//
-//    WriteCmd(0XE1);    //Set Gamma
-//    WriteData(0x00);
-//    WriteData(0x00);
-//    WriteData(0x10);
-//    WriteData(0x03);
-//    WriteData(0x0F);
-//    WriteData(0x05);
-//    WriteData(0x2C);
-//    WriteData(0xA2);
-//    WriteData(0x3F);
-//    WriteData(0x05);
-//    WriteData(0x0E);
-//    WriteData(0x0C);
-//    WriteData(0x37);
-//    WriteData(0x3C);
-//    WriteData(0x0F);
-//
-//    WriteCmd(0x11);    //Exit Sleep
-//    chThdSleepMilliseconds(120);
-//    WriteCmd(0x29);    //Display on
-//    chThdSleepMilliseconds(50);
+//    WriteCmd(0x09);
+//    PortSetupInput(LCD_DATA_GPIO);
+//    for(uint8_t i=0; i<4; i++) {
+//        RdLo();
+//        RdHi();
+//        uint16_t r = LCD_DATA_GPIO->IDR;
+//        Uart.Printf("Lcd: %X\r", r);
+//    }
+//    PortSetupOutput(LCD_DATA_GPIO);
 }
 
 void ILI9341_t::WriteCmd(uint8_t Cmd) {
     DcLo();
     PortSetValue(LCD_DATA_GPIO, Cmd);
     WrLo();
-    __NOP();
     WrHi();
-    __NOP();
     DcHi();
 }
 
 void ILI9341_t::WriteData(uint16_t Data) {
     PortSetValue(LCD_DATA_GPIO, Data);
     WrLo();
-    __NOP();
     WrHi();
-    __NOP();
 }
 
 uint16_t ILI9341_t::ReadData() {
@@ -224,15 +120,9 @@ void ILI9341_t::SetBounds(uint16_t Left, uint16_t Width, uint16_t Top, uint16_t 
 
 void ILI9341_t::Cls(Color_t Color) {
     SetBounds(0, LCD_W, 0, LCD_H);
-//    SetBounds(50, 50, 20, 100);
     // Convert to 565
     uint16_t Clr565 = Color.RGBTo565();
     // Fill LCD
     PrepareToWriteGRAM();
     for(uint32_t i=0; i<(LCD_H * LCD_W); i++) WriteData(Clr565);
-//    for(uint32_t i=0; i<(50 * 100); i++) {
-//        WriteData(0xF800);
-//        WriteData(0xF8);
-//        WriteData(0x00);
-//    }
 }
