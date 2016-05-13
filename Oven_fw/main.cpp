@@ -10,7 +10,6 @@
 #include "ee.h"
 #include "i2cL476.h"
 #include "board.h"
-#include "interface.h"
 #include "gui.h"
 
 App_t App;
@@ -43,7 +42,8 @@ int main(void) {
 //    i2c3.Init();
 //    i2c3.ScanBus();
 
-    Interface.Init();
+    Gui.Init();
+    Gui.DrawPage(0);
 
 //    ee.Init();
 //    ee.On();

@@ -56,6 +56,40 @@ struct Color_t {
     }
 } __attribute__((packed));
 
+#define RED_OF(c)           (((c) & 0xF800)>>8)
+#define GREEN_OF(c)         (((c)&0x007E)>>3)
+#define BLUE_OF(c)          (((c)&0x001F)<<3)
+
+static uint16_t RGBTo565(uint16_t r, uint16_t g, uint16_t b) {
+    uint16_t rslt = (r & 0b11111000) << 8;
+    rslt |= (g & 0b11111100) << 3;
+    rslt |= b >> 3;
+    return rslt;
+}
+
+// Blend 2 colors according to the alpha;
+// The alpha value (0-255). 0 is all background, 255 is all foreground.
+__unused
+static uint16_t ColorBlend(Color_t fg, Color_t bg, uint16_t alpha) {
+    uint16_t fg_ratio = alpha + 1;
+    uint16_t bg_ratio = 256 - alpha;
+    uint16_t r, g, b;
+
+    r = fg.R * fg_ratio;
+    g = fg.G * fg_ratio;
+    b = fg.B * fg_ratio;
+
+    r += bg.R * bg_ratio;
+    g += bg.G * bg_ratio;
+    b += bg.B * bg_ratio;
+
+    r >>= 8;
+    g >>= 8;
+    b >>= 8;
+
+    return RGBTo565(r, g, b);
+}
+
 // ==== Colors ====
 #define clBlack     ((Color_t){0,   0,   0})
 #define clRed       ((Color_t){255, 0,   0})

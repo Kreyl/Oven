@@ -5,7 +5,7 @@
  *      Author: Kreyl
  */
 
-#include "ILI9341.h"
+#include <Gui/ILI9341.h>
 #include "board.h"
 #include "uart.h"
 
@@ -49,11 +49,10 @@ void ILI9341_t::Init() {
     RdHi();
     WrHi();
     // Reset LCD
-    chThdSleepMilliseconds(7);
     RstLo();
-    chThdSleepMilliseconds(11);
+    chThdSleepMilliseconds(4);
     RstHi();
-    chThdSleepMilliseconds(126);
+    chThdSleepMilliseconds(54);
     CsLo(); // Stay selected forever
 
     // Commands
@@ -118,11 +117,25 @@ void ILI9341_t::SetBounds(uint16_t Left, uint16_t Width, uint16_t Top, uint16_t 
     WriteData(YEndAddr);
 }
 
-void ILI9341_t::Cls(Color_t Color) {
-    SetBounds(0, LCD_W, 0, LCD_H);
-    // Convert to 565
+void ILI9341_t::FillWindow(uint32_t Left, uint32_t Width, uint32_t Top, uint32_t Height, uint16_t *Ptr) {
+    SetBounds(Left, Width, Top, Height);
+    uint32_t Cnt = Width * Top;
+    PrepareToWriteGRAM();
+    for(uint32_t i=0; i<Cnt; i++) WriteData(*Ptr++);
+}
+
+void ILI9341_t::DrawRect(uint32_t Left, uint32_t Width, uint32_t Top, uint32_t Height, uint16_t Color565) {
+    SetBounds(Left, Width, Top, Height);
+    uint32_t Cnt = Width * Height;
+    PrepareToWriteGRAM();
+    for(uint32_t i=0; i<Cnt; i++) WriteData(Color565);
+}
+
+void ILI9341_t::DrawRect(uint32_t Left, uint32_t Width, uint32_t Top, uint32_t Height, Color_t Color) {
+    SetBounds(Left, Width, Top, Height);
+    uint32_t Cnt = Width * Height;
     uint16_t Clr565 = Color.RGBTo565();
     // Fill LCD
     PrepareToWriteGRAM();
-    for(uint32_t i=0; i<(LCD_H * LCD_W); i++) WriteData(Clr565);
+    for(uint32_t i=0; i<Cnt; i++) WriteData(Clr565);
 }
