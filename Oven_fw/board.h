@@ -44,6 +44,15 @@
 
 // Mems
 
+// LCD
+#define LCD_DATA_GPIO   GPIOB
+#define LCD_RESET       { GPIOD, 2 }
+#define LCD_CSX         { GPIOC, 3 }
+#define LCD_DC          { GPIOA, 15 }
+#define LCD_WR          { GPIOC, 5 }
+#define LCD_RD          { GPIOC, 4 }
+#define LCD_TE          { GPIOA, 0 }
+
 // I2C
 #define I2C1_GPIO       GPIOB
 #define I2C1_SCL        6

@@ -662,7 +662,49 @@ static inline void PinSetupAlterFunc(
     PGpioPort->AFR[n] |= (uint32_t)AAlterFunc << Offset;
 #endif
 }
-#endif
+
+// ==== Port setup ====
+static inline void PortInit(GPIO_TypeDef *PGpioPort,
+        const PinOutMode_t PinOutMode,
+        const PinPullUpDown_t APullUpDown = pudNone,
+        const PinSpeed_t ASpeed = PIN_SPEED_DEFAULT
+        ) {
+    // Clock
+    PinClockEnable(PGpioPort);
+    // Setup output type
+    if(PinOutMode == omPushPull) PGpioPort->OTYPER = 0;
+    else PGpioPort->OTYPER = 0xFFFF;
+    // Setup Pull-Up or Pull-Down
+    if(APullUpDown == pudPullUp) PGpioPort->PUPDR = 0x55555555; // 01 01 01 01...
+    else if(APullUpDown == pudPullDown) PGpioPort->PUPDR = 0xAAAAAAAA; // 10 10 10 10...
+    else PGpioPort->PUPDR = 0x00000000; // no pull
+    // Setup speed
+    switch(ASpeed) {
+        case psLow:      PGpioPort->OSPEEDR = 0x00000000; break;
+        case psMedium:   PGpioPort->OSPEEDR = 0x55555555; break;
+        case psHigh:     PGpioPort->OSPEEDR = 0xAAAAAAAA; break;
+        case psVeryHigh: PGpioPort->OSPEEDR = 0xFFFFFFFF; break;
+    }
+}
+
+__always_inline
+static inline void PortSetupOutput(GPIO_TypeDef *PGpioPort) {
+    PGpioPort->MODER = 0x55555555;
+}
+__always_inline
+static inline void PortSetupInput(GPIO_TypeDef *PGpioPort) {
+    PGpioPort->MODER = 0x00000000;
+}
+
+__always_inline
+static inline void PortSetValue(GPIO_TypeDef *PGpioPort, uint16_t Data) {
+    PGpioPort->ODR = Data;
+}
+__always_inline
+static inline uint16_t PortGetValue(GPIO_TypeDef *PGpioPort) {
+    return PGpioPort->IDR;
+}
+#endif // Simple pin manipulations
 
 #if defined STM32F10X_LD_VL // Disable JTAG, leaving SWD
 static inline void JtagDisable() {
