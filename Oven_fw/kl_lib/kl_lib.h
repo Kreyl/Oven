@@ -11,6 +11,7 @@
 #include "hal.h"
 #include "core_cmInstr.h"
 #include <cstdlib>
+#include <sys/cdefs.h>
 
 /*
 Build time:
