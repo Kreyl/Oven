@@ -11,6 +11,7 @@
 #include "i2cL476.h"
 #include "board.h"
 #include "interface.h"
+#include "gui.h"
 
 App_t App;
 
