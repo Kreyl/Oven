@@ -5,7 +5,6 @@
  *      Author: Kreyl
  */
 
-#include "fnt_DroidSerif28x27.h"
 #include "fnt_Verdana27x27.h"
 
 #include "gui.h"
@@ -14,16 +13,9 @@
 #include "uart.h"
 #include "font.h"
 
-// Fonts
-
 Gui_t Gui;
 ILI9341_t Lcd;
 FrameBuffer_t<uint16_t, FRAMEBUFFER_LEN> FBuf;
-
-//typedef const struct mf_font_s* font_t;
-
-//extern const struct mf_rlefont_s mf_rlefont_DejaVuSans16;
-//font_t FontDefault = (font_t)&mf_rlefont_DejaVuSans16;
 
 #if 1 // ==== Classes ====
 // Parent class for all
@@ -174,8 +166,6 @@ void DrawStringBox(uint16_t Left, uint16_t Top, uint16_t Width, uint16_t Height,
         } // x
         XC += width+1;
     } // while
-
-//    mf_render_aligned(font, Left, Top, justify, S, 0, drawcharglyph, nullptr);
 }
 
 #endif
