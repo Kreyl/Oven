@@ -20,8 +20,8 @@ struct Color_t {
         };
         uint32_t DWord32;
     };
-    bool operator == (const Color_t &AColor) { return ((R == AColor.R) and (G == AColor.G) and (B == AColor.B)); }
-    bool operator != (const Color_t &AColor) { return ((R != AColor.R) or  (G != AColor.G) or  (B != AColor.B)); }
+    bool operator == (const Color_t &AColor) const { return ((R == AColor.R) and (G == AColor.G) and (B == AColor.B)); }
+    bool operator != (const Color_t &AColor) const { return ((R != AColor.R) or  (G != AColor.G) or  (B != AColor.B)); }
     Color_t& operator = (const Color_t &Right) { R = Right.R; G = Right.G; B = Right.B; return *this; }
     void Adjust(const Color_t *PColor) {
         if     (R < PColor->R) R++;
