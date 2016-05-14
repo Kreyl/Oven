@@ -101,7 +101,7 @@ uint16_t ILI9341_t::ReadData() {
     return Rslt;
 }
 
-void ILI9341_t::SetBounds(uint16_t Left, uint16_t Width, uint16_t Top, uint16_t Height) {
+void ILI9341_t::SetBounds(uint16_t Left, uint16_t Top, uint16_t Width, uint16_t Height) {
     uint16_t XEndAddr = Left + Width  - 1;
     uint16_t YEndAddr = Top  + Height - 1;
     // Write bounds
@@ -117,22 +117,22 @@ void ILI9341_t::SetBounds(uint16_t Left, uint16_t Width, uint16_t Top, uint16_t 
     WriteData(YEndAddr);
 }
 
-void ILI9341_t::FillWindow(uint32_t Left, uint32_t Width, uint32_t Top, uint32_t Height, uint16_t *Ptr) {
-    SetBounds(Left, Width, Top, Height);
-    uint32_t Cnt = Width * Top;
+void ILI9341_t::FillWindow(uint32_t Left, uint32_t Top, uint32_t Width, uint32_t Height, uint16_t *Ptr) {
+    SetBounds(Left, Top, Width, Height);
+    uint32_t Cnt = Width * Height;
     PrepareToWriteGRAM();
     for(uint32_t i=0; i<Cnt; i++) WriteData(*Ptr++);
 }
 
-void ILI9341_t::DrawRect(uint32_t Left, uint32_t Width, uint32_t Top, uint32_t Height, uint16_t Color565) {
-    SetBounds(Left, Width, Top, Height);
+void ILI9341_t::DrawRect(uint32_t Left, uint32_t Top, uint32_t Width, uint32_t Height, uint16_t Color565) {
+    SetBounds(Left, Top, Width, Height);
     uint32_t Cnt = Width * Height;
     PrepareToWriteGRAM();
     for(uint32_t i=0; i<Cnt; i++) WriteData(Color565);
 }
 
-void ILI9341_t::DrawRect(uint32_t Left, uint32_t Width, uint32_t Top, uint32_t Height, Color_t Color) {
-    SetBounds(Left, Width, Top, Height);
+void ILI9341_t::DrawRect(uint32_t Left, uint32_t Top, uint32_t Width, uint32_t Height, Color_t Color) {
+    SetBounds(Left, Top, Width, Height);
     uint32_t Cnt = Width * Height;
     uint16_t Clr565 = Color.RGBTo565();
     // Fill LCD
