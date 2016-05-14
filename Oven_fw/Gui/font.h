@@ -8,6 +8,7 @@
 #pragma once
 
 //#include "uart.h"
+#include <stdint.h>
 
 #define FONT_ROWS_CNT(HeightPx)         ((HeightPx + 7) / 8)
 #define FONT_CHAR_W(WidthPx, HeightPx)  (WidthPx * FONT_ROWS_CNT(HeightPx))
@@ -38,7 +39,7 @@ public:
     uint32_t GetStringWidth(const char* S) const {
         uint32_t W = 0;
         char c;
-        while((c = *S++) != 0) W += GetCharWidth(c);
+        while((c = *S++) != 0) W += GetCharWidth(c)+1;
         return W;
     }
     uint32_t GetCharWidth(char c) const { return CharData[(c - FirstCharCode) * CharLen]; }
@@ -48,3 +49,5 @@ public:
         *PData = (uint8_t*)&CharData[Offset+1];
     }
 };
+
+typedef const Font_t* PFont_t;
