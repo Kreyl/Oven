@@ -7,7 +7,8 @@
 
 #pragma once
 
-#define FONT_CHAR_W(WidthPx, HeightPx)  (WidthPx * ((HeightPx + 7) / 8))
+#define FONT_ROWS_CNT(HeightPx)         ((HeightPx + 7) / 8)
+#define FONT_CHAR_W(WidthPx, HeightPx)  (WidthPx * FONT_ROWS_CNT(HeightPx))
 
 template <uint32_t CharSz>
 struct FontChar_t {
@@ -24,8 +25,8 @@ public:
     uint8_t YCenterLine;
     FontChar_t<FONT_CHAR_W(WidthPx, HeightPx)> *CharData;
 
-    Font_t(uint8_t AFirstCharCode, uint8_t AMaxWidth, uint8_t ARowsCnt, uint8_t AYCenterLine, const uint8_t *FontData) :
-        FirstCharCode(AFirstCharCode), MaxWidth(AMaxWidth), RowsCnt(ARowsCnt), YCenterLine(AYCenterLine) {
+    Font_t(uint8_t AFirstCharCode, uint8_t AYCenterLine, const uint8_t *FontData) :
+        FirstCharCode(AFirstCharCode), MaxWidth(WidthPx), RowsCnt(FONT_ROWS_CNT(HeightPx)), YCenterLine(AYCenterLine) {
         CharData = (FontChar_t<FONT_CHAR_W(WidthPx, HeightPx)> *)FontData;
     }
 //    FontChar_t* GetPChar(char c) const {

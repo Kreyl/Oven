@@ -113,3 +113,11 @@ const uint8_t __Tahoma25x27[] = {
         };
 
 
+const Font_t<25, 27> fntTahoma25x27 {
+    32, // First symbol's code
+    28, // Y centerline
+    __Tahoma25x27
+};
+
+//25, // Max width
+//4,  // Height (8px rows)

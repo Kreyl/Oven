@@ -17,8 +17,6 @@
 
 // Fonts
 
-typedef const uint8_t* font_t;
-
 Gui_t Gui;
 ILI9341_t Lcd;
 FrameBuffer_t<uint16_t, FRAMEBUFFER_LEN> FBuf;
