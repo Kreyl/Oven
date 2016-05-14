@@ -7,6 +7,8 @@
 
 #pragma once
 
+//#include "uart.h"
+
 #define FONT_ROWS_CNT(HeightPx)         ((HeightPx + 7) / 8)
 #define FONT_CHAR_W(WidthPx, HeightPx)  (WidthPx * FONT_ROWS_CNT(HeightPx))
 
@@ -16,20 +18,33 @@ struct FontChar_t {
     uint8_t data[CharSz];
 };
 
-template <uint32_t WidthPx, uint32_t HeightPx>
 class Font_t {
 public:
+    uint8_t Width, Height;
     uint8_t FirstCharCode;
-    uint8_t MaxWidth;
     uint8_t RowsCnt;
     uint8_t YCenterLine;
-    FontChar_t<FONT_CHAR_W(WidthPx, HeightPx)> *CharData;
+private:
+    uint32_t CharLen;
+    const uint8_t* CharData;
+public:
+    Font_t(uint8_t AWidth, uint8_t AHeight, uint8_t AFirstCharCode,
+            uint8_t AYCenterLine, const uint8_t *ACharData) :
+                Width(AWidth), Height(AHeight), FirstCharCode(AFirstCharCode),
+                RowsCnt(FONT_ROWS_CNT(AHeight)), YCenterLine(AYCenterLine),
+                CharLen(Width*RowsCnt + 1),
+                CharData(ACharData) { }
 
-    Font_t(uint8_t AFirstCharCode, uint8_t AYCenterLine, const uint8_t *FontData) :
-        FirstCharCode(AFirstCharCode), MaxWidth(WidthPx), RowsCnt(FONT_ROWS_CNT(HeightPx)), YCenterLine(AYCenterLine) {
-        CharData = (FontChar_t<FONT_CHAR_W(WidthPx, HeightPx)> *)FontData;
+    uint32_t GetStringWidth(const char* S) const {
+        uint32_t W = 0;
+        char c;
+        while((c = *S++) != 0) W += GetCharWidth(c);
+        return W;
     }
-//    FontChar_t* GetPChar(char c) const {
-//        return (FontChar_t*)&CharData[c - FirstCharCode];
-//    }
+    uint32_t GetCharWidth(char c) const { return CharData[(c - FirstCharCode) * CharLen]; }
+    void GetChar(char c, uint8_t *PWidth, uint8_t **PData) const {
+        uint32_t Offset = (c - FirstCharCode) * CharLen;
+        *PWidth = CharData[Offset];
+        *PData = (uint8_t*)&CharData[Offset+1];
+    }
 };

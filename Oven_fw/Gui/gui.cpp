@@ -59,7 +59,7 @@ public:
 #endif
 
 void DrawStringBox(uint16_t Left, uint16_t Top, uint16_t Width, uint16_t Height,
-        const char* S, font_t font, Justify_t Justify, Color_t ClrFront);
+        const char* S, Font_t font, Justify_t Justify, Color_t ClrFront);
 
 // Page 0
 #define BTN_W       99
@@ -128,31 +128,15 @@ void Button_t::Draw() const {
         }
     }
     // Text
-//    DrawStringBox(Left, Top, Width-1, Height-1, Text, Tahoma25x27, jstCenter, clBlack);
+    DrawStringBox(Left, Top, Width-1, Height-1, Text, fntTahoma25x27, jstCenter, clBlack);
     Lcd.FillWindow(Left, Top, Width, Height, FBuf.Buf);
 }
 
 // ==== Text ====
-uint32_t GetStringWidth(const char* S, font_t font) {
-    uint32_t W = 0;
-    uint32_t CHeight = font[2], CMaxWidth = font[1];
-    uint8_t FirstSymbolCode = font[0];
-//    Uart.Printf("ch=%u; cmw=%u; fsc=%u\r", CHeight, CMaxWidth, FirstSymbolCode);
-    char c;
-    while((c = *S++) != 0) {
-        uint32_t Offset = 4 + (c - FirstSymbolCode) * (CMaxWidth*CHeight + 1);
-        uint32_t CW = font[Offset];
-//        Uart.Printf("%c %u   %u\r", c, CW, Offset);
-        W += CW;
-    }
-    return W;
-}
-
 void DrawStringBox(uint16_t Left, uint16_t Top, uint16_t Width, uint16_t Height,
-        const char* S, font_t font, Justify_t Justify, Color_t ClrFront) {
-
+        const char* S, Font_t font, Justify_t Justify, Color_t ClrFront) {
     // String width
-    uint32_t StrW = GetStringWidth(S, font);
+    uint32_t StrW = font.GetStringWidth(S);
     Uart.Printf("W=%u\r", StrW);
     if(StrW > Width) StrW = Width;
     uint32_t XC = 0;    // x in buffer
@@ -162,20 +146,19 @@ void DrawStringBox(uint16_t Left, uint16_t Top, uint16_t Width, uint16_t Height,
         case jstCenter: XC = (Width - StrW) / 2; break;
         case jstRight:  XC = Width - StrW - 1;   break;
     }
-    uint32_t CHeight = font[2], CMaxWidth = font[1];
-    uint32_t YC = (Height - CHeight*8) / 2;   // y in buffer
+    int32_t YC = Height / 2 - font.YCenterLine;   // y in buffer
+    if(YC < 0) YC = 0;
 
-    uint8_t FirstSymbolCode = font[0];
     uint16_t Clr565 = ClrFront.RGBTo565();
     char c;
     while((c = *S++) != 0) {
-        // Pointer to char
-        uint8_t *P = (uint8_t*)font + 4 + (c - FirstSymbolCode) * (CMaxWidth*CHeight + 1);
-        uint32_t width = 1 + *P++;
+        uint8_t width;
+        uint8_t *ptr;
+        font.GetChar(c, &width, &ptr);
         // Iterate pixels
         for(uint8_t x=0; x<width; x++) {
-            for(uint8_t y=0; y<CHeight; y++) {
-                uint8_t b = *P++;   // bit msk
+            for(uint8_t y=0; y<font.RowsCnt; y++) {
+                uint8_t b = *ptr++;   // bit msk
                 // Put pixels to buffer
                 for(uint8_t i=0; i<8; i++) {
                     if(b & 0x01) FBuf.Put(x+XC, i+y*8+YC, Clr565);
