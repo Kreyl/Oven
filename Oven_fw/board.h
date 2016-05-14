@@ -24,10 +24,15 @@
 
 //  Periphery
 #define I2C1_ENABLED            FALSE
+#define I2C2_ENABLED            FALSE
 #define I2C3_ENABLED            TRUE
 
 #define ADC_REQUIRED            FALSE
 #define STM32_DMA_REQUIRED      TRUE    // Leave this macro name for OS
+
+// LCD
+#define LCD_W           320 // }
+#define LCD_H           240 // } Pixels count
 
 #if 1 // ========================== GPIO =======================================
 // UART
@@ -53,6 +58,9 @@
 #define LCD_RD          { GPIOC, 4 }
 #define LCD_TE          { GPIOA, 0 }
 
+// Touch
+#define TOUCH_INT       { GPIOC, 2 }
+
 // I2C
 #define I2C1_GPIO       GPIOB
 #define I2C1_SCL        6
@@ -74,6 +82,10 @@
 #endif // Timer
 
 #if 1 // =========================== SPI =======================================
+#endif
+
+#if 1 // =========================== I2C =======================================
+#define I2C_TOUCH       i2c3
 #endif
 
 #if 1 // ========================== USART ======================================

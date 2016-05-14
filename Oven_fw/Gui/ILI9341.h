@@ -9,9 +9,7 @@
 
 #include "kl_lib.h"
 #include "color.h"
-
-#define LCD_W               320 // }
-#define LCD_H               240 // } Pixels count
+#include "board.h"
 
 class ILI9341_t {
 private:

@@ -44,7 +44,7 @@ i2c_t i2c1 {&I2C1Params};
 #endif
 
 #if I2C2_ENABLED
-static const i2cParams_t I2C1Params = {
+static const i2cParams_t I2C2Params = {
         I2C2,
         I2C2_GPIO, I2C2_SCL, I2C2_SDA,
         0xE14,                          // Calculated by Cube for 100kHz
@@ -53,7 +53,7 @@ static const i2cParams_t I2C1Params = {
         STM32_I2C2_EVENT_NUMBER,
         STM32_I2C2_ERROR_NUMBER
 };
-i2c_t i2c1 {&I2C1Params};
+i2c_t i2c2 {&I2C2Params};
 #endif
 
 #if I2C3_ENABLED
