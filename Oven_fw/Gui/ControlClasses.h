@@ -12,6 +12,13 @@ enum Justify_t { jstLeft, jstCenter, jstRight };
 #if 1 // ==== Classes ====
 enum ControlType_t { ctrlBtn };
 
+// Styles
+struct ButtonStyle_t {
+    PFont_t Font;
+    Color_t ClrText;
+    Color_t ClrTop, ClrBot;
+};
+
 // Parent class for all controls
 class Control_t {
 public:
@@ -25,17 +32,18 @@ public:
                 Left(ALeft), Top(ATop), Width(AWidth), Height(AHeight), Text(AText) {}
 };
 
+enum BtnState_t {btnPressed, btnReleased};
+
 class Button_t : public Control_t {
 public:
-    PFont_t Font;
-    Color_t ClrText, ClrTop, ClrBot;
-    void Draw() const;
+    const ButtonStyle_t *StyleReleased, *StylePressed;
+    void Draw() const { Draw(btnReleased); }
+    void Draw(BtnState_t State) const;
     Button_t(uint16_t ALeft, uint16_t ATop, uint16_t AWidth, uint16_t AHeight,
-            const char* AText, const Font_t &AFont, Color_t AClrText,
-            Color_t AClrTop, Color_t AClrBot) :
+            const char* AText,
+            const ButtonStyle_t &AStyleReleased, const ButtonStyle_t &AStylePressed) :
                 Control_t(ctrlBtn, ALeft, ATop, AWidth, AHeight, AText),
-                Font(&AFont), ClrText(AClrText),
-                ClrTop(AClrTop), ClrBot(AClrBot) {}
+                StyleReleased(&AStyleReleased), StylePressed(&AStylePressed) {}
 };
 
 //class StringBox_t : public Widget_t {

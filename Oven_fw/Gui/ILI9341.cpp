@@ -121,14 +121,17 @@ void ILI9341_t::FillWindow(uint32_t Left, uint32_t Top, uint32_t Width, uint32_t
     SetBounds(Left, Top, Width, Height);
     uint32_t Cnt = Width * Height;
     PrepareToWriteGRAM();
-    for(uint32_t i=0; i<Cnt; i++) WriteData(*Ptr++);
+//    uint32_t t = TIM5->CNT;
+    while(Cnt--) WriteData(*Ptr++);
+//    uint32_t delta = TIM5->CNT - t;
+//    Uart.Printf("t=%u\r", delta);
 }
 
 void ILI9341_t::DrawRect(uint32_t Left, uint32_t Top, uint32_t Width, uint32_t Height, uint16_t Color565) {
     SetBounds(Left, Top, Width, Height);
     uint32_t Cnt = Width * Height;
     PrepareToWriteGRAM();
-    for(uint32_t i=0; i<Cnt; i++) WriteData(Color565);
+    while(Cnt--) WriteData(Color565);
 }
 
 void ILI9341_t::DrawRect(uint32_t Left, uint32_t Top, uint32_t Width, uint32_t Height, Color_t Color) {
@@ -137,5 +140,5 @@ void ILI9341_t::DrawRect(uint32_t Left, uint32_t Top, uint32_t Width, uint32_t H
     uint16_t Clr565 = Color.RGBTo565();
     // Fill LCD
     PrepareToWriteGRAM();
-    for(uint32_t i=0; i<Cnt; i++) WriteData(Clr565);
+    while(Cnt--) WriteData(Clr565);
 }

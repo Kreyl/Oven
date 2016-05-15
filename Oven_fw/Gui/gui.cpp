@@ -57,15 +57,17 @@ void Gui_t::ITask() {
 // Grafics
 
 // Button
-void Button_t::Draw() const {
+void Button_t::Draw(BtnState_t State) const {
 //    Uart.Printf("%u %u %u %u %S\r", Left, Width, Top, Height, Text);
     if(FBuf.Setup(Width, Height) != OK) {
         Uart.Printf("Too Large Btn\r");
         return;
     }
+    // Select style depending on state
+    const ButtonStyle_t *Style = (State == btnReleased)? StyleReleased : StylePressed;
     // Shape
-    if(ClrTop == ClrBot) {
-        uint16_t Color565 = ClrTop.RGBTo565();
+    if(Style->ClrTop == Style->ClrBot) {
+        uint16_t Color565 = Style->ClrTop.RGBTo565();
         for(uint32_t y=0; y<Height; y++) {
             for(uint32_t x=0; x<Width; x++) FBuf.Put(x, y, Color565);
         }
@@ -74,12 +76,12 @@ void Button_t::Draw() const {
         uint32_t dalpha = 255 / Height;
         uint32_t alpha = 0;
         for(uint32_t y=0; y<Height; y++, alpha += dalpha) {
-            uint16_t Color565 = ColorBlend(ClrBot, ClrTop, alpha);
+            uint16_t Color565 = ColorBlend(Style->ClrBot, Style->ClrTop, alpha);
             for(uint32_t x=0; x<Width; x++) FBuf.Put(x, y, Color565);
         }
     }
     // Text
-    DrawStringBox(Left, Top, Width-1, Height-1, Text, Font, jstCenter, ClrText);
+    DrawStringBox(Left, Top, Width-1, Height-1, Text, Style->Font, jstCenter, Style->ClrText);
     Lcd.FillWindow(Left, Top, Width, Height, FBuf.Buf);
 }
 
