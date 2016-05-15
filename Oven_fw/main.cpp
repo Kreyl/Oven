@@ -11,7 +11,6 @@
 #include "i2cL476.h"
 #include "board.h"
 #include "gui.h"
-#include "stmpe811.h"
 
 App_t App;
 
@@ -43,10 +42,10 @@ int main(void) {
     i2c3.Init();
 //    i2c3.ScanBus();
 
-    Touch.Init();
 
-//    Gui.Init();
-//    Gui.DrawPage(0);
+
+    Gui.Init();
+    Gui.DrawPage(0);
 
 //    ee.Init();
 //    ee.On();
@@ -71,7 +70,7 @@ __attribute__ ((__noreturn__))
 void App_t::ITask() {
     while(true) {
         chThdSleepMilliseconds(99);
-        Touch.ReadTouch();
+
 
 //        uint32_t EvtMsk = chEvtWaitAny(ALL_EVENTS);
 #if 0 // ==== USB ====

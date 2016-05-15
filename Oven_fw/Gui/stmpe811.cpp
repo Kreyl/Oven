@@ -115,7 +115,6 @@ uint8_t STMPE811_t::ReadTouch() {
 //    }
     if(PinIsSet(TOUCH_INT)) {
         Write(STMPE811_INT_STA, 0xFF);      // Clear all interrupts
-//        Read(
 //        uint8_t b;
 //        Read(STMPE811_FIFO_SIZE, &b);
 //        Uart.Printf("tch: %X\r", b);
@@ -138,8 +137,9 @@ uint8_t STMPE811_t::ReadTouch() {
         Y = lroundf(CLBR_Y(FX));
         chSysUnlock();
         Uart.Printf("tch: %d %d; %d %d\r", FX, FY, X, Y);
+        return NEW;
     }
-    return OK;
+    else return EMPTY;
 }
 
 uint8_t STMPE811_t::Write(uint8_t Addr, uint8_t Data) {
