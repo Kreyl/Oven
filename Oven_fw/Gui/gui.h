@@ -9,12 +9,15 @@
 
 #include "kl_lib.h"
 #include "kl_buf.h"
+#include "ControlClasses.h"
 
 #define FRAMEBUFFER_LEN             10000   // 100x100
 #define TOUCH_POLLING_PERIOD_MS     18
 
 class Gui_t {
 private:
+    const Page_t *CurrPage;
+    void ProcessClick();
 public:
     void Init();
     void DrawPage(uint8_t APage);

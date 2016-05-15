@@ -10,11 +10,8 @@
 #include "gui.h"
 #include "ILI9341.h"
 #include "stmpe811.h"
-#include "color.h"
 #include "uart.h"
-#include "font.h"
 
-#include "ControlClasses.h"
 #include "Controls.h"
 
 Gui_t Gui;
@@ -33,6 +30,7 @@ static THD_FUNCTION(GuiThread, arg) {
 
 #if 1 // =========================== Implementation ============================
 void Gui_t::Init() {
+    CurrPage = &Page0;
     Lcd.Init();
     Touch.Init();
     chThdCreateStatic(waGuiThread, sizeof(waGuiThread), NORMALPRIO, GuiThread, NULL);
@@ -40,18 +38,42 @@ void Gui_t::Init() {
 
 void Gui_t::DrawPage(uint8_t APage) {
     Lcd.Cls(clBlack);
-//    DrawPage0();
     Page0.Draw();
 }
 
 __noreturn
 void Gui_t::ITask() {
+    bool TouchProcessed = false, DetouchProcessed = true;
     while(true) {
         chThdSleepMilliseconds(TOUCH_POLLING_PERIOD_MS);
-        if(Touch.ReadTouch() == NEW) {
-            // New touch detected
+        if(Touch.IsTouched()) {
+            if(TouchProcessed) Touch.DiscardData();
+            else {   // New touch detected
+                if(Touch.ReadData() == NEW) {
+                    TouchProcessed = true;
+                    DetouchProcessed = false;
+                    Uart.Printf("X=%d; Y=%d\r", Touch.X, Touch.Y);
+                    CurrPage->ProcessTouch(Touch.X, Touch.Y);
+                }
+                else {
+                    TouchProcessed = false;
+                    DetouchProcessed = false;
+                }
+            } // new touch
+        }
+        else {
+            TouchProcessed = false;
+            if(!DetouchProcessed) {
+                DetouchProcessed = true;
+                Uart.Printf("Detouch\r");
+                CurrPage->ProcessDetouch(Touch.X, Touch.Y);
+            }
         }
     } // while true
+}
+
+void Gui_t::ProcessClick() {
+//    CurrPage
 }
 
 // Grafics

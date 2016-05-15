@@ -70,8 +70,6 @@
 STMPE811_t Touch;
 
 void STMPE811_t::Init() {
-//    Uart.Printf("Clbr: %d %d %d %d\r", CLBR_AX, CLBR_BX, CLBR_AY, CLBR_BY);
-
     // IRQ pin
     PinSetupIn(TOUCH_INT, pudPullDown);
     // Reset
@@ -95,51 +93,46 @@ void STMPE811_t::Init() {
     Write(STMPE811_FIFO_TH, 0x01);      // Configure the Touch FIFO threshold: single point reading
     Write(STMPE811_FIFO_STA, 0x01);     // Clear FIFO
     Write(STMPE811_FIFO_STA, 0x00);     // Put the FIFO back into operation mode
-    // Z axis data format: 1 fractional, 7 whole
-    Write(STMPE811_TSC_FRACTION_Z, 0x07);
+    Write(STMPE811_TSC_FRACTION_Z, 0x07);   // Z axis data format: 7 fractional, 1 whole
     Write(STMPE811_TSC_I_DRIVE, 0x01);  // max 50mA touchscreen line current
 //    Write(STMPE811_TSC_CTRL, 0x01);     // X&Y&Z, no tracking, Enable
     Write(STMPE811_TSC_CTRL, 0x03);     // X&Y, no tracking, Enable
     Write(STMPE811_INT_STA, 0xFF);      // Clear all interrupts
     Write(STMPE811_INT_CTRL, 0x05);     // Active high, Level interrupt, enable interrupts
-    Write(STMPE811_INT_EN, 0x01);       // IRQ: touch_det en
+//    Write(STMPE811_INT_EN, 0x01);       // IRQ: touch_det en
+    Write(STMPE811_INT_EN, 0x02);       // IRQ: FIFO th
 }
 
-uint8_t STMPE811_t::ReadTouch() {
-//    Uart.Printf("pin: %u; ", PinIsSet(TOUCH_INT));
+uint8_t STMPE811_t::ReadData() {
+    Write(STMPE811_INT_STA, 0xFF);      // Clear all interrupts
 //    uint8_t b;
-//    Read(STMPE811_FIFO_STA, &b);
-//    Uart.Printf("tch: %X\r", b);
-//    if(b & 0x10) {  // There is something in FIFO
-//
-//    }
-    if(PinIsSet(TOUCH_INT)) {
-        Write(STMPE811_INT_STA, 0xFF);      // Clear all interrupts
-//        uint8_t b;
-//        Read(STMPE811_FIFO_SIZE, &b);
+//    Read(STMPE811_FIFO_SIZE, &b);
+//    if(b == 0) return EMPTY;
 //        Uart.Printf("tch: %X\r", b);
-        // Read coords
-        int16_t FX = 0, FY = 0;
-        uint8_t Data[3];
-        while(FX < 150 or FY < 150) {
-            Read(STMPE811_FIFO_SIZE, Data);
-            if(Data == 0) return FAILURE;
-            if(Read(STMPE811_TSC_DATA_XYZ, Data, 3) != OK) return FAILURE;
-            FX = (((uint16_t)Data[0]) << 4) | (((uint16_t)Data[1]) >> 4);
-            FY = (((uint16_t)Data[1] & 0x0F) << 8) | ((uint16_t)Data[2]);
-        }
-        // Clear FIFO
-        Write(STMPE811_FIFO_STA, 0x01);     // Clear FIFO
-        Write(STMPE811_FIFO_STA, 0x00);     // Put the FIFO back into operation mode
-        // Calculate calibrated values
-        chSysLock();
-        X = lroundf(CLBR_X(FY));
-        Y = lroundf(CLBR_Y(FX));
-        chSysUnlock();
-        Uart.Printf("tch: %d %d; %d %d\r", FX, FY, X, Y);
-        return NEW;
-    }
-    else return EMPTY;
+    // Read coords
+    int16_t FX = 0, FY = 0;
+    uint8_t Data[3];
+    if(Read(STMPE811_TSC_DATA_XYZ, Data, 3) != OK) return FAILURE;
+    FX = (((uint16_t)Data[0]) << 4) | (((uint16_t)Data[1]) >> 4);
+    FY = (((uint16_t)Data[1] & 0x0F) << 8) | ((uint16_t)Data[2]);
+    // Clear FIFO
+    Write(STMPE811_FIFO_STA, 0x01);     // Clear FIFO
+    Write(STMPE811_FIFO_STA, 0x00);     // Put the FIFO back into operation mode
+    // Calculate calibrated values
+    chSysLock();
+    X = lroundf(CLBR_X(FY));
+    Y = lroundf(CLBR_Y(FX));
+    chSysUnlock();
+//        Uart.Printf("tch: %d %d; %d %d\r", FX, FY, X, Y);
+//        Uart.Printf("tch: %d %d %d\r", FX, FY, Data[3]);
+//        Uart.Printf("tch: %d %d %X\r", FX, FY, Data[0] & 0x80);
+    return NEW;
+}
+
+void STMPE811_t::DiscardData() {
+    Write(STMPE811_INT_STA, 0xFF);      // Clear all interrupts
+    Write(STMPE811_FIFO_STA, 0x01);     // Clear FIFO
+    Write(STMPE811_FIFO_STA, 0x00);     // Put the FIFO back into operation mode
 }
 
 uint8_t STMPE811_t::Write(uint8_t Addr, uint8_t Data) {

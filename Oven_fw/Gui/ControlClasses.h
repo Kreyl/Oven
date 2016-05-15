@@ -7,6 +7,9 @@
 
 #pragma once
 
+#include "color.h"
+#include "font.h"
+
 enum Justify_t { jstLeft, jstCenter, jstRight };
 
 #if 1 // ==== Classes ====
@@ -26,6 +29,9 @@ public:
     uint16_t Left, Top, Width, Height;
     const char* Text;
     virtual void Draw() const;
+    bool IsClickInside(int32_t x, int32_t y) const {
+        return (x >= Left) and (x <= Left+Width) and (y >= Top) and (y <= Top+Height);
+    }
     Control_t(ControlType_t AType,
             uint16_t ALeft, uint16_t ATop, uint16_t AWidth, uint16_t AHeight, const char* AText) :
                 Type(AType),
@@ -66,6 +72,21 @@ public:
             PCtrl->Draw();
         } // for
     }
+
+    void ProcessTouch(int32_t x, int32_t y) const {
+        for(uint32_t i=0; i<CtrlCnt; i++) {
+            const Control_t *PCtrl = Controls[i];
+            if(PCtrl->Type == ctrlBtn) {
+//                if(PCtrl->IsClickInside(x, y))
+            }
+
+        }
+    }
+
+    void ProcessDetouch(int32_t x, int32_t y) const {
+
+    }
+
     Page_t(const Control_t **AControls, uint32_t ACtrlCnt) :
         Controls(AControls), CtrlCnt(ACtrlCnt) {}
 };
