@@ -17,7 +17,7 @@ const ButtonStyle_t BtnStyleReleased = {
 };
 const ButtonStyle_t BtnStylePressed = {
         &fntVerdana27x27, clWhite,   // Text
-        BTN_COLOR2, BTN_COLOR1
+        (Color_t){200, 200, 200}, (Color_t){0, 63, 0}
 };
 
 // Page 0
@@ -29,16 +29,21 @@ const ButtonStyle_t BtnStylePressed = {
 #define BTN_Y0          0
 
 #if 1 // ========================== Page 0 =====================================
+// Event callbacks
+extern void OnBtnOk(const Control_t *p);
+
 const Button_t BtnOk {
     BTN_X0, BTN_Y0, BTN_W, BTN_H,
     "OK",
-    BtnStyleReleased, BtnStylePressed
+    BtnStyleReleased, BtnStylePressed,
+    OnBtnOk
 };
 
 const Button_t BtnCancel {
     BTN_X0, (BTN_Y0 + BTN_H + BTN_DIST), BTN_W, BTN_H,
     "Cancel",
-    BtnStyleReleased, BtnStylePressed
+    BtnStyleReleased, BtnStylePressed,
+    nullptr
 };
 
 const Control_t* __Page0Ctrls[2] = {

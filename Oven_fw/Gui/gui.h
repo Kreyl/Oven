@@ -17,7 +17,6 @@
 class Gui_t {
 private:
     const Page_t *CurrPage;
-    void ProcessClick();
 public:
     void Init();
     void DrawPage(uint8_t APage);

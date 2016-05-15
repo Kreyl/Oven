@@ -52,7 +52,7 @@ void Gui_t::ITask() {
                 if(Touch.ReadData() == NEW) {
                     TouchProcessed = true;
                     DetouchProcessed = false;
-                    Uart.Printf("X=%d; Y=%d\r", Touch.X, Touch.Y);
+//                    Uart.Printf("X=%d; Y=%d\r", Touch.X, Touch.Y);
                     CurrPage->ProcessTouch(Touch.X, Touch.Y);
                 }
                 else {
@@ -65,15 +65,15 @@ void Gui_t::ITask() {
             TouchProcessed = false;
             if(!DetouchProcessed) {
                 DetouchProcessed = true;
-                Uart.Printf("Detouch\r");
+//                Uart.Printf("Detouch\r");
                 CurrPage->ProcessDetouch(Touch.X, Touch.Y);
             }
         }
     } // while true
 }
 
-void Gui_t::ProcessClick() {
-//    CurrPage
+void OnBtnOk(const Control_t *p) {
+    Uart.Printf("Ok Detouched\r");
 }
 
 // Grafics
