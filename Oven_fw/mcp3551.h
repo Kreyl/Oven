@@ -26,7 +26,7 @@ public:
         PinSetupAlterFunc(Clk, omPushPull, pudNone, SpiAF);
         PinSetupAlterFunc(SDO, omPushPull, pudPullUp, SpiAF); // setup all registers
         // SPI
-        ISpi.Setup(boMSB, cpolIdleLow, cphaFirstEdge, sbFdiv64, bitn8);
+        ISpi.Setup(boMSB, cpolIdleLow, cphaFirstEdge, sbFdiv16, bitn8);
         ISpi.Enable();
     }
 

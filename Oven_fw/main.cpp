@@ -17,9 +17,18 @@
 
 App_t App;
 TmrKL_t TmrMeasurement;
+EE_t ee {&i2c3};
 
 const MCP3551_t AdcHeater(ADC_H_SPI, ADC_H_CS, ADC_H_CLK, ADC_H_SDO, ADC_H_SPI_AF);
 const MCP3551_t AdcPCB   (ADC_P_SPI, ADC_P_CS, ADC_P_CLK, ADC_P_SDO, ADC_P_SPI_AF);
+
+const ThermoProfile_t TPDefault = {
+        { 1,   3, 160, 0,  90 },
+        { 0.5, 1, 180, 0,  160 },
+        { 1,   4, 240, 30, 40 },
+        { -2, -6, 80,  0,  300 }
+};
+
 
 int main(void) {
     // ==== Setup clock frequency ====
@@ -49,18 +58,14 @@ int main(void) {
     i2c3.Init();    // Touch controller and EEPROM
 //    i2c3.ScanBus();
 
-    //    ee.Init();
-    //    ee.On();
+    // Read profiles from EE
+    App.LoadProfiles();
 
     Gui.Init();
     Gui.DrawPage(0);
 
     AdcHeater.Init();
     AdcPCB.Init();
-
-//    Uart.Printf("IMR1: %X; EMR1: %X; RTSR: %X; FTSR: %X; EXTICR2: %X; EXTICR3: %X\r",
-//            EXTI->IMR1, EXTI->EMR1, EXTI->RTSR1, EXTI->FTSR1,
-//            SYSCFG->EXTICR[1], SYSCFG->EXTICR[2]);
 
     TmrMeasurement.InitAndStart(chThdGetSelfX(), MS2ST(MEASURE_PERIOD_MS), EVTMSK_MEASURE_TIME, tktPeriodic);
 
@@ -88,14 +93,14 @@ void App_t::ITask() {
         if(EvtMsk & EVTMSK_ADC_HEATER_DONE) {
             uint32_t AdcCode = AdcHeater.GetData();
             tHeater = CalcTemperature(AdcCode);
-            int32_t T = (int32_t)(tHeater * 10);
-            Uart.Printf("Htr: %X;  T=%d\r", AdcCode, T);
+//            int32_t T = (int32_t)(tHeater * 10);
+//            Uart.Printf("Htr: %X;  T=%d\r", AdcCode, T);
         }
         if(EvtMsk & EVTMSK_ADC_PCB_DONE) {
             uint32_t AdcCode = AdcPCB.GetData();
             tHeater = CalcTemperature(AdcCode);
-            int32_t T = (int32_t)(tHeater * 10);
-            Uart.Printf("Pcb: %X;  T=%d\r", AdcCode, T);
+//            int32_t T = (int32_t)(tHeater * 10);
+//            Uart.Printf("Pcb: %X;  T=%d\r", AdcCode, T);
         }
 
         if(EvtMsk & EVTMSK_UART_NEW_CMD) {
@@ -110,6 +115,20 @@ float App_t::CalcTemperature(uint32_t AdcCode) {
     float Code = AdcCode & 0x3FFFFF;   // Clear MS bits;
     float R = 10000 * (Code / ((1<<20) - Code));
     return (R - 100)/0.385; // 100R at 0C, 0.385 ohm/degree
+}
+
+void App_t::LoadProfiles() {
+    ee.Read(0, &Profiles.Cnt, 4);
+    Uart.Printf("ProfCnt = %u\r", Profiles.Cnt);
+    if(Profiles.Cnt == 0 or Profiles.Cnt > PROFILES_CNT_MAX) {
+        Profiles.Cnt = 1;
+        Profiles.Prof[0] = TPDefault;
+        SaveProfiles();
+    }
+}
+
+void App_t::SaveProfiles() {
+    ee.Write(0, &Profiles, sizeof(Profiles));
 }
 
 #if 1 // ======================= Command processing ============================
