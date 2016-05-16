@@ -11,8 +11,14 @@
 #include "i2cL476.h"
 #include "board.h"
 #include "gui.h"
+#include "mcp3551.h"
+
+#define MEASURE_PERIOD_MS   45
 
 App_t App;
+TmrKL_t TmrMeasurement;
+
+const MCP3551_t AdcHeater(SPI1, ADC_H_CS, ADC_H_CLK, ADC_H_SDO);
 
 int main(void) {
     // ==== Setup clock frequency ====
@@ -39,28 +45,18 @@ int main(void) {
 
     App.InitThread();
 
-    i2c3.Init();
+    i2c3.Init();    // Touch controller and EEPROM
 //    i2c3.ScanBus();
 
-
+    //    ee.Init();
+    //    ee.On();
 
     Gui.Init();
     Gui.DrawPage(0);
 
-//    ee.Init();
-//    ee.On();
+    AdcHeater.Init();
 
-//    uint8_t txbuf[16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
-//    uint8_t rxBuf[9];
-
-//    uint8_t r;
-////    r = i2c3.WriteWrite(0x50, &txbuf[7], 1, &txbuf[0], 1);
-//    r = i2c3.WriteWrite(0x50, &txbuf[7], 1, &txbuf[5], 1);
-//    Uart.Printf("rslt=%u\r", r);
-//    chThdSleepMilliseconds(27);
-//    r = i2c3.WriteRead(0x50, txbuf, 1, rxBuf, 11);
-//    Uart.Printf("rslt=%u\r", r);
-//    if(r == OK) Uart.Printf("%A\r", rxBuf, 11, ' ');
+    TmrMeasurement.InitAndStart(chThdGetSelfX(), MS2ST(MEASURE_PERIOD_MS), EVTMSK_MEASURE_TIME, tktPeriodic);
 
     // Main cycle
     App.ITask();
@@ -69,10 +65,7 @@ int main(void) {
 __attribute__ ((__noreturn__))
 void App_t::ITask() {
     while(true) {
-        chThdSleepMilliseconds(99);
-
-
-//        uint32_t EvtMsk = chEvtWaitAny(ALL_EVENTS);
+        __unused uint32_t EvtMsk = chEvtWaitAny(ALL_EVENTS);
 #if 0 // ==== USB ====
         if(EvtMsk & EVTMSK_USB_READY) {
             Uart.Printf("\rUsbReady");
@@ -81,10 +74,23 @@ void App_t::ITask() {
             Uart.Printf("\rUsbSuspend");
         }
 #endif
-//        if(EvtMsk & EVTMSK_UART_NEW_CMD) {
-//            OnCmd((Shell_t*)&Uart);
-//            Uart.SignalCmdProcessed();
-//        }
+        if(EvtMsk & EVTMSK_MEASURE_TIME) {
+            uint32_t ADCValue = AdcHeater.GetData();
+            ADCValue &= 0x3FFFFF;   // Clear MS bits
+            float Code = ADCValue;
+//            float Te
+            float R = 10000 * (Code / ((1<<20) - Code));
+            float fT = 10*(R - 100)/0.385;  // == *10 dg C
+            int32_t T = (int32_t)fT;
+
+            Uart.Printf("ADC: %X;  T=%d\r", ADCValue, T);
+
+        }
+
+        if(EvtMsk & EVTMSK_UART_NEW_CMD) {
+            OnCmd((Shell_t*)&Uart);
+            Uart.SignalCmdProcessed();
+        }
 
     } // while true
 }

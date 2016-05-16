@@ -96,10 +96,6 @@ public:
         for(uint32_t i=0; i<CtrlCnt; i++) {
             const Control_t *PCtrl = Controls[i];
             PCtrl->CheckTouchAndAct(x, y);
-//            if(PCtrl->Type == ctrlBtn) {
-//                if(PCtrl->IsClickInside(x, y))
-//            }
-
         }
     }
 

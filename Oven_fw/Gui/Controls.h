@@ -9,7 +9,7 @@
 
 // ==== Style ====
 #define BTN_COLOR1  clWhite
-#define BTN_COLOR2  (Color_t){0, 99, 0}
+#define BTN_COLOR2  (Color_t){0, 99, 00}
 
 const ButtonStyle_t BtnStyleReleased = {
         &fntVerdana27x27, clWhite,   // Text

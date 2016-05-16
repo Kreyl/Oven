@@ -20,7 +20,7 @@ Maybe, to calm Eclipse, it will be required to write extra quote in the end: "\"
 */
 
 // Lib version
-#define KL_LIB_VERSION      "20160502_1801"
+#define KL_LIB_VERSION      "20160516_0956"
 
 #if defined STM32L1XX
 #include "stm32l1xx.h"
@@ -506,9 +506,19 @@ static inline void PinSetupModeOut(GPIO_TypeDef *PGpioPort, const uint16_t APinN
     PGpioPort->MODER &= ~(0b11 << Offset);  // clear previous bits
     PGpioPort->MODER |=   0b01 << Offset;   // Set new bits
 }
+static inline void PinSetupModeIn(const PortPin_t PortPin) {
+    uint8_t Offset = PortPin.Pin*2;
+    PortPin.PGpio->MODER &= ~(0b11 << Offset); // clear previous bits
+}
 static inline void PinSetupModeAnalog(GPIO_TypeDef *PGpioPort, const uint16_t APinNumber) {
     PGpioPort->MODER |= 0b11 << (APinNumber*2);
 }
+static inline void PinSetupModeAlterFunc(const PortPin_t PortPin) {
+    uint8_t Offset = PortPin.Pin*2;
+    PortPin.PGpio->MODER &= ~(0b11 << Offset); // clear previous bits
+    PortPin.PGpio->MODER |= 0b10 << Offset;    // Set new bits (AF mode)
+}
+
 
 // ==== Full-sized setup ====
 static inline void PinSetupOut(
@@ -661,6 +671,15 @@ static inline void PinSetupAlterFunc(
     PGpioPort->AFR[n] &= ~(0b1111 << Offset);
     PGpioPort->AFR[n] |= (uint32_t)AAlterFunc << Offset;
 #endif
+}
+
+static inline void PinSetupAlterFunc(
+        const PortPin_t PortPin,
+        const PinOutMode_t PinOutMode,
+        const PinPullUpDown_t APullUpDown,
+        const PinAF_t AAlterFunc,
+        const PinSpeed_t ASpeed = PIN_SPEED_DEFAULT) {
+    PinSetupAlterFunc(PortPin.PGpio, PortPin.Pin, PinOutMode, APullUpDown, AAlterFunc, ASpeed);
 }
 
 // ==== Port setup ====
@@ -950,13 +969,17 @@ class Spi_t {
 private:
     SPI_TypeDef *PSpi;
 public:
-    void Setup(SPI_TypeDef *Spi, BitOrder_t BitOrder,
-            CPOL_t CPOL, CPHA_t CPHA, SpiBaudrate_t Baudrate, BitNumber_t BitNumber = bitn8) {
-        PSpi = Spi;
+    Spi_t(SPI_TypeDef *ASpi) : PSpi(ASpi) {}
+    // Example: boMSB, cpolIdleLow, cphaFirstEdge, sbFdiv2, bitn8
+    void Setup(BitOrder_t BitOrder, CPOL_t CPOL, CPHA_t CPHA,
+            SpiBaudrate_t Baudrate, BitNumber_t BitNumber = bitn8) const {
         // Clocking
         if      (PSpi == SPI1) { rccEnableSPI1(FALSE); }
-#ifdef RCC_APB1ENR_SPI2EN
+#ifdef SPI2
         else if (PSpi == SPI2) { rccEnableSPI2(FALSE); }
+#endif
+#ifdef SPI3
+        else if (PSpi == SPI3) { rccEnableSPI3(FALSE); }
 #endif
         // Mode: Master, NSS software controlled and is 1, 8bit, NoCRC, FullDuplex
         PSpi->CR1 = SPI_CR1_SSM | SPI_CR1_SSI | SPI_CR1_MSTR;
@@ -973,31 +996,50 @@ public:
         if(BitNumber == bitn16) PSpi->CR2 = (uint16_t)0b1111 << 8;
         else PSpi->CR2 = ((uint16_t)0b0111 << 8) | SPI_CR2_FRXTH; // 8 bit
         PSpi->I2SCFGR &= ~((uint16_t)SPI_I2SCFGR_I2SMOD);       // Disable I2S
+#elif defined STM32L4XX
+        // Generate RXNE when FIFO level is greater or equal to 1/4 (8 bit)
+        if(BitNumber == bitn8) PSpi->CR2 |= 0x0700; // 8bit
+        else if(BitNumber == bitn16) PSpi->CR2 |= 0x0F00;
+        PSpi->CR2 |= SPI_CR2_FRXTH;
+
 #endif
     }
-    void Enable () { PSpi->CR1 |=  SPI_CR1_SPE; }
-    void Disable() { PSpi->CR1 &= ~SPI_CR1_SPE; }
-    void EnableTxDma()  { PSpi->CR2 |=  SPI_CR2_TXDMAEN; }
-    void DisableTxDma() { PSpi->CR2 &= ~SPI_CR2_TXDMAEN; }
-    void EnableRxDma()  { PSpi->CR2 |=  SPI_CR2_RXDMAEN; }
-    void DisableRxDma() { PSpi->CR2 &= ~SPI_CR2_RXDMAEN; }
-    void SetRxOnly()    { PSpi->CR1 |=  SPI_CR1_RXONLY; }
-    void SetFullDuplex(){ PSpi->CR1 &= ~SPI_CR1_RXONLY; }
+    void Enable ()       const { PSpi->CR1 |=  SPI_CR1_SPE; }
+    void Disable()       const { PSpi->CR1 &= ~SPI_CR1_SPE; }
+    void EnableTxDma()   const { PSpi->CR2 |=  SPI_CR2_TXDMAEN; }
+    void DisableTxDma()  const { PSpi->CR2 &= ~SPI_CR2_TXDMAEN; }
+    void EnableRxDma()   const { PSpi->CR2 |=  SPI_CR2_RXDMAEN; }
+    void DisableRxDma()  const { PSpi->CR2 &= ~SPI_CR2_RXDMAEN; }
+    void SetRxOnly()     const { PSpi->CR1 |=  SPI_CR1_RXONLY; }
+    void SetFullDuplex() const { PSpi->CR1 &= ~SPI_CR1_RXONLY; }
 #if defined STM32F072xB
-    void WaitFTLVLZero(){ while(PSpi->SR & SPI_SR_FTLVL); }
+    void WaitFTLVLZero() const { while(PSpi->SR & SPI_SR_FTLVL); }
 #endif
-    void WaitBsyHi2Lo() { while(PSpi->SR & SPI_SR_BSY); }
-    void ClearRxBuf()   { while(PSpi->SR & SPI_SR_RXNE) (void)PSpi->DR; }
-    uint8_t ReadWriteByte(uint8_t AByte) {
+    void WaitBsyHi2Lo()  const { while(PSpi->SR & SPI_SR_BSY); }
+    void ClearRxBuf()    const { while(PSpi->SR & SPI_SR_RXNE) (void)PSpi->DR; }
+    uint8_t ReadWriteByte(uint8_t AByte) const {
         *((volatile uint8_t*)&PSpi->DR) = AByte;
         while(!(PSpi->SR & SPI_SR_RXNE));  // Wait for SPI transmission to complete
         return *((volatile uint8_t*)&PSpi->DR);
     }
-    uint16_t ReadWriteWord(uint16_t Word) {
+    uint16_t ReadWriteWord(uint16_t Word) const {
         PSpi->DR = Word;
         while(!(PSpi->SR & SPI_SR_RXNE));
         return PSpi->DR;
     }
+#if defined STM32L4XX
+    void WriteRead3Bytes(uint8_t *ptr) const {
+        *((volatile uint8_t*)&PSpi->DR) = ptr[0];
+        *((volatile uint8_t*)&PSpi->DR) = ptr[1];
+        *((volatile uint8_t*)&PSpi->DR) = ptr[2];
+        while(!(PSpi->SR & SPI_SR_RXNE));
+        ptr[0] = *((volatile uint8_t*)&PSpi->DR);
+        while(!(PSpi->SR & SPI_SR_RXNE));
+        ptr[1] = *((volatile uint8_t*)&PSpi->DR);
+        while(!(PSpi->SR & SPI_SR_RXNE));
+        ptr[2] = *((volatile uint8_t*)&PSpi->DR);
+    }
+#endif
 };
 #endif
 

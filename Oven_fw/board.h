@@ -47,8 +47,6 @@
 #define LED_BLUE        { GPIOC, 8, TIM3, 3 }
 #define LED_WHITE       { GPIOC, 9, TIM3, 4 }
 
-// Mems
-
 // LCD
 #define LCD_DATA_GPIO   GPIOB
 #define LCD_RESET       { GPIOD, 2 }
@@ -72,6 +70,14 @@
 #define I2C3_SCL        0
 #define I2C3_SDA        1
 
+// ADCs
+#define ADC_H_CS        { GPIOA, 7 }
+#define ADC_H_CLK       { GPIOA, 5 }
+#define ADC_H_SDO       { GPIOA, 6 }
+#define ADC_P_CS        { GPIOC, 12 }
+#define ADC_P_CLK       { GPIOC, 10 }
+#define ADC_P_SDO       { GPIOC, 11 }
+
 #endif // GPIO
 
 #if 1 // ========================= Timer =======================================
@@ -82,6 +88,8 @@
 #endif // Timer
 
 #if 1 // =========================== SPI =======================================
+#define ADC_H_SPI       SPI1
+#define ADC_P_SPI       SPI3
 #endif
 
 #if 1 // =========================== I2C =======================================
