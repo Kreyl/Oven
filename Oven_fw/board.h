@@ -74,9 +74,11 @@
 #define ADC_H_CS        { GPIOA, 7 }
 #define ADC_H_CLK       { GPIOA, 5 }
 #define ADC_H_SDO       { GPIOA, 6 }
+#define ADC_H_SPI_AF    AF5
 #define ADC_P_CS        { GPIOC, 12 }
 #define ADC_P_CLK       { GPIOC, 10 }
 #define ADC_P_SDO       { GPIOC, 11 }
+#define ADC_P_SPI_AF    AF6
 
 #endif // GPIO
 

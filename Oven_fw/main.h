@@ -18,6 +18,8 @@
 class App_t {
 private:
     thread_t *PThread;
+    float tHeater, tPCB;
+    float CalcTemperature(uint32_t AdcCode);
 public:
     // Eternal methods
     void InitThread() { PThread = chThdGetSelfX(); }

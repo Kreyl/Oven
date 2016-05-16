@@ -13,12 +13,13 @@
 #include "gui.h"
 #include "mcp3551.h"
 
-#define MEASURE_PERIOD_MS   45
+#define MEASURE_PERIOD_MS   99
 
 App_t App;
 TmrKL_t TmrMeasurement;
 
-const MCP3551_t AdcHeater(SPI1, ADC_H_CS, ADC_H_CLK, ADC_H_SDO);
+const MCP3551_t AdcHeater(ADC_H_SPI, ADC_H_CS, ADC_H_CLK, ADC_H_SDO, ADC_H_SPI_AF);
+const MCP3551_t AdcPCB   (ADC_P_SPI, ADC_P_CS, ADC_P_CLK, ADC_P_SDO, ADC_P_SPI_AF);
 
 int main(void) {
     // ==== Setup clock frequency ====
@@ -55,6 +56,11 @@ int main(void) {
     Gui.DrawPage(0);
 
     AdcHeater.Init();
+    AdcPCB.Init();
+
+//    Uart.Printf("IMR1: %X; EMR1: %X; RTSR: %X; FTSR: %X; EXTICR2: %X; EXTICR3: %X\r",
+//            EXTI->IMR1, EXTI->EMR1, EXTI->RTSR1, EXTI->FTSR1,
+//            SYSCFG->EXTICR[1], SYSCFG->EXTICR[2]);
 
     TmrMeasurement.InitAndStart(chThdGetSelfX(), MS2ST(MEASURE_PERIOD_MS), EVTMSK_MEASURE_TIME, tktPeriodic);
 
@@ -62,7 +68,7 @@ int main(void) {
     App.ITask();
 }
 
-__attribute__ ((__noreturn__))
+__noreturn
 void App_t::ITask() {
     while(true) {
         __unused uint32_t EvtMsk = chEvtWaitAny(ALL_EVENTS);
@@ -75,16 +81,21 @@ void App_t::ITask() {
         }
 #endif
         if(EvtMsk & EVTMSK_MEASURE_TIME) {
-            uint32_t ADCValue = AdcHeater.GetData();
-            ADCValue &= 0x3FFFFF;   // Clear MS bits
-            float Code = ADCValue;
-//            float Te
-            float R = 10000 * (Code / ((1<<20) - Code));
-            float fT = 10*(R - 100)/0.385;  // == *10 dg C
-            int32_t T = (int32_t)fT;
+            AdcHeater.StartMeasurement();
+            AdcPCB.StartMeasurement();
+        }
 
-            Uart.Printf("ADC: %X;  T=%d\r", ADCValue, T);
-
+        if(EvtMsk & EVTMSK_ADC_HEATER_DONE) {
+            uint32_t AdcCode = AdcHeater.GetData();
+            tHeater = CalcTemperature(AdcCode);
+            int32_t T = (int32_t)(tHeater * 10);
+            Uart.Printf("Htr: %X;  T=%d\r", AdcCode, T);
+        }
+        if(EvtMsk & EVTMSK_ADC_PCB_DONE) {
+            uint32_t AdcCode = AdcPCB.GetData();
+            tHeater = CalcTemperature(AdcCode);
+            int32_t T = (int32_t)(tHeater * 10);
+            Uart.Printf("Pcb: %X;  T=%d\r", AdcCode, T);
         }
 
         if(EvtMsk & EVTMSK_UART_NEW_CMD) {
@@ -95,14 +106,46 @@ void App_t::ITask() {
     } // while true
 }
 
+float App_t::CalcTemperature(uint32_t AdcCode) {
+    float Code = AdcCode & 0x3FFFFF;   // Clear MS bits;
+    float R = 10000 * (Code / ((1<<20) - Code));
+    return (R - 100)/0.385; // 100R at 0C, 0.385 ohm/degree
+}
+
 #if 1 // ======================= Command processing ============================
 void App_t::OnCmd(Shell_t *PShell) {
 	Cmd_t *PCmd = &PShell->Cmd;
     __attribute__((unused)) int32_t dw32 = 0;  // May be unused in some configurations
     Uart.Printf("\r%S\r", PCmd->Name);
     // Handle command
-    if(PCmd->NameIs("Ping")) PShell->Ack(OK);
+    if(PCmd->NameIs("Ping")) {
+        PShell->Ack(OK);
+    }
 
     else PShell->Ack(CMD_UNKNOWN);
 }
+#endif
+
+#if 1 // ============================= IRQs ====================================
+extern "C" {
+// ==== ADC Heater ====
+CH_IRQ_HANDLER(Vector9C) {  // EXTI Line[9:5] interrupts
+    CH_IRQ_PROLOGUE();
+    AdcHeater.DisableIRQ();
+    chSysLockFromISR();
+    App.SignalEvtI(EVTMSK_ADC_HEATER_DONE);
+    chSysUnlockFromISR();
+    CH_IRQ_EPILOGUE();
+}
+// ==== ADC PCB ====
+CH_IRQ_HANDLER(VectorE0) {  // EXTI Line[15:10] interrupts
+    CH_IRQ_PROLOGUE();
+    AdcPCB.DisableIRQ();
+    chSysLockFromISR();
+    App.SignalEvtI(EVTMSK_ADC_PCB_DONE);
+    chSysUnlockFromISR();
+    CH_IRQ_EPILOGUE();
+}
+} // extern c
+
 #endif

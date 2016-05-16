@@ -803,11 +803,11 @@ enum ExtiTrigType_t {ttRising, ttFalling, ttRisingFalling};
 */
 class PinIrq_t {
 public:
-    uint8_t Pin;
-    PinIrq_t(uint16_t APin) { Pin = APin; }
+    PortPin_t Pin;
+    PinIrq_t(PortPin_t APin) : Pin(APin) { }
 
     void SetTriggerType(ExtiTrigType_t ATriggerType) const {
-        uint32_t IrqMsk = 1 << Pin;
+        uint32_t IrqMsk = 1 << Pin.Pin;
         switch(ATriggerType) {
 #if defined STM32L4XX
             case ttRising:
@@ -839,19 +839,19 @@ public:
         } // switch
     }
 
-    void Init(GPIO_TypeDef *PGPIO, PinPullUpDown_t APullUpDown, ExtiTrigType_t ATriggerType) const {
+    void Init(PinPullUpDown_t APullUpDown, ExtiTrigType_t ATriggerType) const {
         // Init pin as input
-        PinSetupIn(PGPIO, Pin, APullUpDown);
+        PinSetupIn(Pin, APullUpDown);
         rccEnableAPB2(RCC_APB2ENR_SYSCFGEN, FALSE); // Enable sys cfg controller
         // Connect EXTI line to the pin of the port
-        uint8_t Indx   = Pin / 4;            // Indx of EXTICR register
-        uint8_t Offset = (Pin & 0x03) * 4;   // Offset in EXTICR register
+        uint8_t Indx   = Pin.Pin / 4;            // Indx of EXTICR register
+        uint8_t Offset = (Pin.Pin & 0x03) * 4;   // Offset in EXTICR register
         SYSCFG->EXTICR[Indx] &= ~((uint32_t)0b1111 << Offset);  // Clear port-related bits
         // GPIOA requires all zeroes => nothing to do in this case
-        if     (PGPIO == GPIOB) SYSCFG->EXTICR[Indx] |= (uint32_t)0b0001 << Offset;
-        else if(PGPIO == GPIOC) SYSCFG->EXTICR[Indx] |= (uint32_t)0b0010 << Offset;
+        if     (Pin.PGpio == GPIOB) SYSCFG->EXTICR[Indx] |= (uint32_t)0b0001 << Offset;
+        else if(Pin.PGpio == GPIOC) SYSCFG->EXTICR[Indx] |= (uint32_t)0b0010 << Offset;
         // Configure EXTI line
-        uint32_t IrqMsk = 1 << Pin;
+        uint32_t IrqMsk = 1 << Pin.Pin;
 #if defined STM32L4XX
         EXTI->IMR1  |=  IrqMsk;      // Interrupt mode enabled
         EXTI->EMR1  &= ~IrqMsk;      // Event mode disabled
@@ -864,12 +864,12 @@ public:
         EXTI->PR    =  IrqMsk;      // Clean irq flag
 #endif
     }
-    void EnableIrq(const uint32_t Priority) const { nvicEnableVector(PIN2IRQ_CHNL(Pin), Priority); }
-    void DisableIrq() const { nvicDisableVector(PIN2IRQ_CHNL(Pin)); }
+    void EnableIrq(const uint32_t Priority) const { nvicEnableVector(PIN2IRQ_CHNL(Pin.Pin), Priority); }
+    void DisableIrq() const { nvicDisableVector(PIN2IRQ_CHNL(Pin.Pin)); }
 #if defined STM32L4XX
-    void CleanIrqFlag() const { EXTI->PR1 = (1 << Pin); }
-    bool IsIrqPending() const { return BitIsSet(EXTI->PR1, (1 << Pin)); }
-    void GenerateIrq()  const { EXTI->SWIER1 = (1 << Pin); }
+    void CleanIrqFlag() const { EXTI->PR1 = (1 << Pin.Pin); }
+    bool IsIrqPending() const { return BitIsSet(EXTI->PR1, (1 << Pin.Pin)); }
+    void GenerateIrq()  const { EXTI->SWIER1 = (1 << Pin.Pin); }
 #else
     void CleanIrqFlag() const { EXTI->PR = (1 << Pin); }
     bool IsIrqPending() const { return BitIsSet(EXTI->PR, (1 << Pin)); }

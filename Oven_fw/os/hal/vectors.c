@@ -43,9 +43,12 @@
  * @notapi
  */
 /*lint -save -e9075 [8.4] All symbols are invoked from asm context.*/
+
+extern void PrintfC(const char *format, ...);
+
 void _unhandled_exception(void) {
 /*lint -restore*/
-
+    PrintfC("Unhandled IRQ\r");
   while (true) {
   }
 }
@@ -99,7 +102,7 @@ void Vector8C(void) __attribute__((weak, alias("_unhandled_exception")));
 void Vector90(void) __attribute__((weak, alias("_unhandled_exception")));
 void Vector94(void) __attribute__((weak, alias("_unhandled_exception")));
 void Vector98(void) __attribute__((weak, alias("_unhandled_exception")));
-void Vector9C(void) __attribute__((weak, alias("_unhandled_exception")));
+void Vector9C(void);// __attribute__((weak, alias("_unhandled_exception")));
 #endif
 #if CORTEX_NUM_VECTORS > 24
 void VectorA0(void) __attribute__((weak, alias("_unhandled_exception")));
@@ -126,7 +129,7 @@ void VectorD8(void) __attribute__((weak, alias("_unhandled_exception")));
 void VectorDC(void) __attribute__((weak, alias("_unhandled_exception")));
 #endif
 #if CORTEX_NUM_VECTORS > 40
-void VectorE0(void) __attribute__((weak, alias("_unhandled_exception")));
+void VectorE0(void); // __attribute__((weak, alias("_unhandled_exception")));
 void VectorE4(void) __attribute__((weak, alias("_unhandled_exception")));
 void VectorE8(void) __attribute__((weak, alias("_unhandled_exception")));
 void VectorEC(void) __attribute__((weak, alias("_unhandled_exception")));
