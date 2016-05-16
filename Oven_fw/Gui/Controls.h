@@ -17,7 +17,7 @@ const ButtonStyle_t BtnStyleReleased = {
 };
 const ButtonStyle_t BtnStylePressed = {
         &fntVerdana27x27, clWhite,   // Text
-        (Color_t){200, 200, 200}, (Color_t){0, 63, 0}
+        BTN_COLOR2, BTN_COLOR1
 };
 
 // Page 0

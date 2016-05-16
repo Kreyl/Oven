@@ -70,6 +70,8 @@
 #define I2C3_SCL        0
 #define I2C3_SDA        1
 
+#define I2C3_AF         AF4
+
 // ADCs
 #define ADC_H_CS        { GPIOA, 7 }
 #define ADC_H_CLK       { GPIOA, 5 }
