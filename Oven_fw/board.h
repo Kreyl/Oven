@@ -15,7 +15,7 @@
 #define STM32L476xx
 
 // Freq of external crystal if any. Leave it here even if not used.
-#define CRYSTAL_FREQ_HZ 12000000
+#define CRYSTAL_FREQ_HZ         12000000
 
 // OS timer settings
 #define STM32_ST_IRQ_PRIORITY   2
@@ -73,22 +73,12 @@
 
 #define I2C3_AF         AF4
 
-// ==== ADCs ====
-// GPIO, CS, CLK, SDO, Alterfunc, Spi
+// ADCs: GPIO, CS, CLK, SDO, Alterfunc, Spi
 #define ADC_H_SETUP     { GPIOA,  7,  5, 6,  AF5, SPI1 }
 #define ADC_P_SETUP     { GPIOC, 12, 10, 11, AF6, SPI3 }
 
-//#define ADC_H_GPIO      GPIOA
-//#define ADC_H_CS        7
-//#define ADC_H_CLK       5
-//#define ADC_H_SDO       6
-//#define ADC_H_SPI_AF    AF5
-
-//#define ADC_P_GPIO      GPIOC
-//#define ADC_P_CS        12
-//#define ADC_P_CLK       10
-//#define ADC_P_SDO       11
-//#define ADC_P_SPI_AF    AF6
+// Outputs
+#define HEATER_SETUP    { GPIOC, 7, TIM8, 2, invNotInverted, omPushPull, 10000 }
 
 #endif // GPIO
 

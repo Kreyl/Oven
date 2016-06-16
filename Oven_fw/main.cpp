@@ -19,7 +19,7 @@ App_t App;
 TmrKL_t TmrMeasurement {MS2ST(MEASURE_PERIOD_MS), EVTMSK_MEASURE_TIME, tktPeriodic};
 EE_t ee {&i2c3};
 
-//PinOutputPWM_t Heater;
+const PinOutputPWM_t Heater(HEATER_SETUP);
 extern MCP3551_t AdcHeater;
 extern MCP3551_t AdcPCB;
 
@@ -67,7 +67,9 @@ int main(void) {
 
     AdcHeater.Init();
     AdcPCB.Init();
-//    Heater
+
+    Heater.Init();
+    Heater.SetFrequencyHz(1);
 
     TmrMeasurement.InitAndStart();
 
@@ -140,6 +142,14 @@ void App_t::OnCmd(Shell_t *PShell) {
     // Handle command
     if(PCmd->NameIs("Ping")) {
         PShell->Ack(OK);
+    }
+
+    else if(PCmd->NameIs("Heater")) {
+        if(PCmd->GetNextInt32(&dw32) == OK) {
+            Heater.Set(dw32);
+            PShell->Ack(OK);
+        }
+        else PShell->Ack(CMD_ERROR);
     }
 
     else PShell->Ack(CMD_UNKNOWN);

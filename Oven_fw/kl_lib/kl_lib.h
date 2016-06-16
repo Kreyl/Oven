@@ -406,9 +406,6 @@ public:
     void EnableIrqOnUpdate()  const { ITmr->DIER |= TIM_DIER_UIE; }
     void EnableIrq(uint32_t IrqChnl, uint32_t IrqPriority) const { nvicEnableVector(IrqChnl, IrqPriority); }
     void ClearIrqPendingBit() const { ITmr->SR &= ~TIM_SR_UIF; }
-    // PWM
-    void InitPwm(GPIO_TypeDef *GPIO, uint16_t N, uint8_t Chnl, uint32_t ATopValue,
-            Inverted_t Inverted, PinOutMode_t OutputType) const;
 };
 #endif
 
@@ -419,7 +416,7 @@ enum PinPullUpDown_t {
     pudPullDown = 0b10
 };
 
-struct PortPinTim_t {
+struct PwmSetup_t {
     GPIO_TypeDef *PGpio;
     uint16_t Pin;
     TIM_TypeDef *PTimer;
@@ -464,7 +461,7 @@ enum PinSpeed_t {
 
 enum AlterFunc_t {
     AF0=0, AF1=1, AF2=2, AF3=3, AF4=4, AF5=5, AF6=6, AF7=7,
-#if defined STM32F2XX || defined STM32F4XX || defined STM32L1XX
+#if defined STM32F2XX || defined STM32F4XX || defined STM32L1XX || defined STM32L4XX
     AF8=8, AF9=9,AF10=10, AF11=11, AF12=12, AF13=13, AF14=14, AF15=15
 #endif
 };
@@ -744,17 +741,13 @@ static inline void JtagDisable() {
 */
 class PinOutputPWM_t : private Timer_t {
 private:
-    const PortPinTim_t IPin;
+    const PwmSetup_t ISetup;
 public:
-    void Set(const uint8_t AValue) const { *TMR_PCCR(ITmr, IPin.TimerChnl) = AValue; }    // CCR[N] = AValue
-    void Init() const {
-        Timer_t::Init();
-        InitPwm(IPin.PGpio, IPin.Pin, IPin.TimerChnl, IPin.TopValue, IPin.Inverted, IPin.OutputType);
-        Enable();
-    }
-    void Deinit() const { Timer_t::Deinit(); PinSetupAnalog(IPin.PGpio, IPin.Pin); }
+    void Set(const uint16_t AValue) const { *TMR_PCCR(ITmr, ISetup.TimerChnl) = AValue; }    // CCR[N] = AValue
+    void Init() const;
+    void Deinit() const { Timer_t::Deinit(); PinSetupAnalog(ISetup.PGpio, ISetup.Pin); }
     void SetFrequencyHz(uint32_t FreqHz) const { Timer_t::SetUpdateFrequency(FreqHz); }
-    PinOutputPWM_t(const PortPinTim_t &APinTim) : Timer_t(APinTim.PTimer), IPin(APinTim) {}
+    PinOutputPWM_t(const PwmSetup_t &ASetup) : Timer_t(ASetup.PTimer), ISetup(ASetup) {}
 };
 #endif
 

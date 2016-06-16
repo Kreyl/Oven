@@ -130,8 +130,8 @@ void Timer_t::SetupPrescaler(uint32_t PrescaledFreqHz) const {
     ITmr->PSC = (Freq / PrescaledFreqHz) - 1;
 }
 
-void Timer_t::InitPwm(GPIO_TypeDef *GPIO, uint16_t N, uint8_t Chnl, uint32_t ATopValue,
-        Inverted_t Inverted, PinOutMode_t OutputType) const {
+void PinOutputPWM_t::Init() const {
+    Timer_t::Init();
     // GPIO
 #if defined STM32L1XX
     if              (ITmr == TIM2)              PinSetupAlterFunc(GPIO, N, OutputType, pudNone, AF1);
@@ -161,15 +161,21 @@ void Timer_t::InitPwm(GPIO_TypeDef *GPIO, uint16_t N, uint8_t Chnl, uint32_t ATo
     else if(ANY_OF_3(ITmr, TIM12, TIM13, TIM14)) PinSetupAlterFunc(GPIO, N, OutputType, pudNone, AF9);
 #elif defined STM32F100_MCUCONF
     PinSetupAlterFunc(GPIO, N, OutputType, pudNone, AF0);   // Alternate function is dummy
-//    ITmr->BDTR = 0xC000;   // Main output Enable
+#elif defined STM32L4XX
+    AlterFunc_t AF = AF1;
+    if(ITmr == TIM1 or ITmr == TIM2) AF = AF1;
+    else if(ITmr == TIM3 or ITmr == TIM4 or ITmr == TIM5) AF = AF2;
+    else if(ITmr == TIM8) AF = AF3;
+    else if(ITmr == TIM15 or ITmr == TIM16 or ITmr == TIM17) AF = AF14;
+    PinSetupAlterFunc(ISetup.PGpio, ISetup.Pin, ISetup.OutputType, pudNone, AF);
 #endif
 #if !defined STM32L151xB
     ITmr->BDTR = 0xC000;   // Main output Enable
 #endif
-    ITmr->ARR = ATopValue;
-    // Output
-    uint16_t tmp = (Inverted == invInverted)? 0b111 : 0b110; // PWM mode 1 or 2
-    switch(Chnl) {
+    ITmr->ARR = ISetup.TopValue;
+    // Setup Output
+    uint16_t tmp = (ISetup.Inverted == invInverted)? 0b111 : 0b110; // PWM mode 1 or 2
+    switch(ISetup.TimerChnl) {
         case 1:
             ITmr->CCMR1 |= (tmp << 4);
             ITmr->CCER  |= TIM_CCER_CC1E;
@@ -188,6 +194,7 @@ void Timer_t::InitPwm(GPIO_TypeDef *GPIO, uint16_t N, uint8_t Chnl, uint32_t ATo
             break;
         default: break;
     }
+    Enable();
 }
 
 void Timer_t::SetUpdateFrequency(uint32_t FreqHz) const {
@@ -220,12 +227,6 @@ void Timer_t::SetUpdateFrequency(uint32_t FreqHz) const {
     if(div != 0) div--;
     ITmr->PSC = div;
 	ITmr->CNT = 0;  // Reset counter to start from scratch
-//#if defined STM32F2XX || defined STM32F4XX
-//    uint32_t UpdFreqMax;
-//    if(ANY_OF_5(ITmr, TIM1, TIM8, TIM9, TIM10, TIM11))  // APB2 is clock src
-//        UpdFreqMax = (*PClk) * Clk.TimerAPB2ClkMulti / (ITmr->ARR + 1);
-//    else // APB1 is clock src
-//        UpdFreqMax = (*PClk) * Clk.TimerAPB1ClkMulti / (ITmr->ARR + 1);
 }
 #endif
 
