@@ -73,7 +73,7 @@ void Gui_t::ITask() {
 }
 
 void OnBtnOk(const Control_t *p) {
-    Uart.Printf("Ok Detouched\r");
+//    Uart.Printf("Ok Detouched\r");
 }
 
 // Grafics

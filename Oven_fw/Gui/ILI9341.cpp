@@ -10,35 +10,26 @@
 #include "uart.h"
 
 #if 1 // ==== Pin driving functions ====
-#define RstHi()  { PinSet(LCD_RESET);   }
-#define RstLo()  { PinClear(LCD_RESET); }
-#define CsHi()   { PinSet(LCD_CSX);    }
-#define CsLo()   { PinClear(LCD_CSX);  }
-#define DcHi()   { PinSet(LCD_DC);    }
-#define DcLo()   { PinClear(LCD_DC);  }
-#define WrHi()   { PinSet(LCD_WR);    }
-#define WrLo()   { PinClear(LCD_WR);  }
-#define RdHi()   { PinSet(LCD_RD);    }
-#define RdLo()   { PinClear(LCD_RD);  }
+#define RstHi()  { PinSet  (LCD_RESET_GPIO, LCD_RESET_PIN); }
+#define RstLo()  { PinClear(LCD_RESET_GPIO, LCD_RESET_PIN); }
+#define CsHi()   { PinSet  (LCD_CSX_GPIO, LCD_CSX_PIN);     }
+#define CsLo()   { PinClear(LCD_CSX_GPIO, LCD_CSX_PIN);     }
+#define DcHi()   { PinSet  (LCD_DC_GPIO, LCD_DC_PIN); }
+#define DcLo()   { PinClear(LCD_DC_GPIO, LCD_DC_PIN); }
+#define WrHi()   { PinSet  (LCD_WR_GPIO, LCD_WR_PIN); }
+#define WrLo()   { PinClear(LCD_WR_GPIO, LCD_WR_PIN); }
+#define RdHi()   { PinSet  (LCD_RD_GPIO, LCD_RD_PIN); }
+#define RdLo()   { PinClear(LCD_RD_GPIO, LCD_RD_PIN); }
 #define Write(Value) PortSetValue(LCD_DATA_GPIO, Value)
-
-/*
-#define WriteData(Data) { \
-    LCD_DATA_GPIO->ODR = Data; \
-    GPIOC->BRR = (1 << 5); \
-    GPIOC->BSRR = (1 << 5); \
-}
-*/
-
 #endif
 
 void ILI9341_t::Init() {
     // ==== GPIO ====
-    PinSetupOut(LCD_RESET, omPushPull, pudNone);
-    PinSetupOut(LCD_CSX, omPushPull, pudNone);
-    PinSetupOut(LCD_DC, omPushPull, pudNone, psHigh);
-    PinSetupOut(LCD_WR, omPushPull, pudNone, psHigh);
-    PinSetupOut(LCD_RD, omPushPull, pudNone, psHigh);
+    PinSetupOut(LCD_RESET_GPIO, LCD_RESET_PIN, omPushPull);
+    PinSetupOut(LCD_CSX_GPIO,   LCD_CSX_PIN,   omPushPull);
+    PinSetupOut(LCD_DC_GPIO,    LCD_DC_PIN,    omPushPull, psHigh);
+    PinSetupOut(LCD_WR_GPIO,    LCD_WR_PIN,    omPushPull, psHigh);
+    PinSetupOut(LCD_RD_GPIO,    LCD_RD_PIN,   omPushPull, psHigh);
     // Data port
     PortInit(LCD_DATA_GPIO, omPushPull, pudNone, psHigh);
     PortSetupOutput(LCD_DATA_GPIO);
@@ -92,14 +83,14 @@ void ILI9341_t::WriteData(uint16_t Data) {
     WrHi();
 }
 
-uint16_t ILI9341_t::ReadData() {
-    PortSetupInput(LCD_DATA_GPIO);
-    RdLo();
-    uint16_t Rslt = PortGetValue(LCD_DATA_GPIO);
-    RdHi();
-    PortSetupOutput(LCD_DATA_GPIO);
-    return Rslt;
-}
+//uint16_t ILI9341_t::ReadData() {
+//    PortSetupInput(LCD_DATA_GPIO);
+//    RdLo();
+//    uint16_t Rslt = PortGetValue(LCD_DATA_GPIO);
+//    RdHi();
+//    PortSetupOutput(LCD_DATA_GPIO);
+//    return 0;//Rslt;
+//}
 
 void ILI9341_t::SetBounds(uint16_t Left, uint16_t Top, uint16_t Width, uint16_t Height) {
     uint16_t XEndAddr = Left + Width  - 1;
@@ -121,10 +112,10 @@ void ILI9341_t::FillWindow(uint32_t Left, uint32_t Top, uint32_t Width, uint32_t
     SetBounds(Left, Top, Width, Height);
     uint32_t Cnt = Width * Height;
     PrepareToWriteGRAM();
-//    uint32_t t = TIM5->CNT;
+    uint32_t t = TIM5->CNT;
     while(Cnt--) WriteData(*Ptr++);
-//    uint32_t delta = TIM5->CNT - t;
-//    Uart.Printf("t=%u\r", delta);
+    uint32_t delta = TIM5->CNT - t;
+    Uart.Printf("t=%u\r", delta);
 }
 
 void ILI9341_t::DrawRect(uint32_t Left, uint32_t Top, uint32_t Width, uint32_t Height, uint16_t Color565) {

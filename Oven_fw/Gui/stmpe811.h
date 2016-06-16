@@ -20,7 +20,7 @@ private:
     uint8_t Read(uint8_t Addr, uint16_t *PData);
 public:
     void Init();
-    bool IsTouched() { return PinIsSet(TOUCH_INT); }
+    bool IsTouched();
     uint8_t ReadData();
     void DiscardData();
     int32_t X, Y;

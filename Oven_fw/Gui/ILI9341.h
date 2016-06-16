@@ -15,7 +15,7 @@ class ILI9341_t {
 private:
     void WriteCmd(uint8_t Cmd);
     void WriteData(uint16_t Data);
-    uint16_t ReadData();
+//    uint16_t ReadData();
     void SetBounds(uint16_t Left, uint16_t Top, uint16_t Width, uint16_t Height);
     void PrepareToWriteGRAM() { WriteCmd(0x2C); }
 public:

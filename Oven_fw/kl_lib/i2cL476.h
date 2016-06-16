@@ -14,7 +14,7 @@ struct i2cParams_t {
     GPIO_TypeDef *PGpio;
     uint16_t SclPin;
     uint16_t SdaPin;
-    PinAF_t PinAF;
+    AlterFunc_t PinAF;
     uint32_t Timing;    // Setting for TIMINGR register
     // DMA
     const stm32_dma_stream_t *PDmaTx;

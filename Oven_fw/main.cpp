@@ -16,11 +16,12 @@
 #define MEASURE_PERIOD_MS   99
 
 App_t App;
-TmrKL_t TmrMeasurement;
+TmrKL_t TmrMeasurement {MS2ST(MEASURE_PERIOD_MS), EVTMSK_MEASURE_TIME, tktPeriodic};
 EE_t ee {&i2c3};
 
-const MCP3551_t AdcHeater(ADC_H_SPI, ADC_H_CS, ADC_H_CLK, ADC_H_SDO, ADC_H_SPI_AF);
-const MCP3551_t AdcPCB   (ADC_P_SPI, ADC_P_CS, ADC_P_CLK, ADC_P_SDO, ADC_P_SPI_AF);
+//PinOutputPWM_t Heater;
+extern MCP3551_t AdcHeater;
+extern MCP3551_t AdcPCB;
 
 const ThermoProfile_t TPDefault = {
         { 1,   3, 160, 0,  90 },
@@ -66,8 +67,9 @@ int main(void) {
 
     AdcHeater.Init();
     AdcPCB.Init();
+//    Heater
 
-    TmrMeasurement.InitAndStart(chThdGetSelfX(), MS2ST(MEASURE_PERIOD_MS), EVTMSK_MEASURE_TIME, tktPeriodic);
+    TmrMeasurement.InitAndStart();
 
     // Main cycle
     App.ITask();
@@ -91,14 +93,13 @@ void App_t::ITask() {
         }
 
         if(EvtMsk & EVTMSK_ADC_HEATER_DONE) {
-            uint32_t AdcCode = AdcHeater.GetData();
-            tHeater = CalcTemperature(AdcCode);
+//            Uart.Printf("Code: %X\r", AdcCode);
+            tHeater = CalcTemperature(AdcHeater.LastData);
 //            int32_t T = (int32_t)(tHeater * 10);
-//            Uart.Printf("Htr: %X;  T=%d\r", AdcCode, T);
+//            Uart.Printf("Htr: %X;  T=%d\r", AdcHeater.LastData, T);
         }
         if(EvtMsk & EVTMSK_ADC_PCB_DONE) {
-            uint32_t AdcCode = AdcPCB.GetData();
-            tHeater = CalcTemperature(AdcCode);
+            tPCB = CalcTemperature(AdcPCB.LastData);
 //            int32_t T = (int32_t)(tHeater * 10);
 //            Uart.Printf("Pcb: %X;  T=%d\r", AdcCode, T);
         }
@@ -119,7 +120,7 @@ float App_t::CalcTemperature(uint32_t AdcCode) {
 
 void App_t::LoadProfiles() {
     ee.Read(0, &Profiles.Cnt, 4);
-    Uart.Printf("ProfCnt = %u\r", Profiles.Cnt);
+//    Uart.Printf("ProfCnt = %u\r", Profiles.Cnt);
     if(Profiles.Cnt == 0 or Profiles.Cnt > PROFILES_CNT_MAX) {
         Profiles.Cnt = 1;
         Profiles.Prof[0] = TPDefault;
@@ -143,28 +144,4 @@ void App_t::OnCmd(Shell_t *PShell) {
 
     else PShell->Ack(CMD_UNKNOWN);
 }
-#endif
-
-#if 1 // ============================= IRQs ====================================
-extern "C" {
-// ==== ADC Heater ====
-CH_IRQ_HANDLER(Vector9C) {  // EXTI Line[9:5] interrupts
-    CH_IRQ_PROLOGUE();
-    AdcHeater.DisableIRQ();
-    chSysLockFromISR();
-    App.SignalEvtI(EVTMSK_ADC_HEATER_DONE);
-    chSysUnlockFromISR();
-    CH_IRQ_EPILOGUE();
-}
-// ==== ADC PCB ====
-CH_IRQ_HANDLER(VectorE0) {  // EXTI Line[15:10] interrupts
-    CH_IRQ_PROLOGUE();
-    AdcPCB.DisableIRQ();
-    chSysLockFromISR();
-    App.SignalEvtI(EVTMSK_ADC_PCB_DONE);
-    chSysUnlockFromISR();
-    CH_IRQ_EPILOGUE();
-}
-} // extern c
-
 #endif

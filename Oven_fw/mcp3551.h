@@ -9,47 +9,47 @@
 
 #include "kl_lib.h"
 
+struct MCP3551Setup_t {
+    GPIO_TypeDef *PGpio;
+    uint32_t Cs, Clk, Sdo;
+    AlterFunc_t AF;
+    Spi_t Spi;
+};
+
 // 5 MHz top SPI freq. t conv = 73ms
 
 class MCP3551_t {
 private:
-    Spi_t ISpi;
-    PortPin_t CS, Clk, SDO;
-    PinAF_t SpiAF;
-    PinIrq_t PinIrq;
+    const MCP3551Setup_t ISetup;
+    const PinIrq_t PinIrq;
+    void CsLo() const { PinClear(ISetup.PGpio, ISetup.Cs); }
+    void CsHi() const { PinSet  (ISetup.PGpio, ISetup.Cs); }
 public:
-    void Init() const {
-        // GPIO
-        PinSetupOut(CS, omPushPull, pudNone);
-        PinSet(CS);
-        PinIrq.Init(pudPullUp, ttFalling);
-        PinSetupAlterFunc(Clk, omPushPull, pudNone, SpiAF);
-        PinSetupAlterFunc(SDO, omPushPull, pudPullUp, SpiAF); // setup all registers
-        // SPI
-        ISpi.Setup(boMSB, cpolIdleLow, cphaFirstEdge, sbFdiv16, bitn8);
-        ISpi.Enable();
-    }
+    uint32_t LastData;
+    void Init();
 
     void StartMeasurement() const {
         // Prepare IRQ
         PinIrq.CleanIrqFlag();
         PinIrq.EnableIrq(IRQ_PRIO_LOW);
         // Select chip to start measurement. SDO will fall to low when ready.
-        PinClear(CS);
+        CsLo();
     }
     void DisableIRQ() const { PinIrq.DisableIrq(); }
 
     // Call when ready
-    uint32_t GetData() const {
+    void GetData() {
         Convert::DWordBytes_t dwb;
         dwb.DWord = 0;
-        ISpi.WriteRead3Bytes(&dwb.b[1]);
+        ISetup.Spi.WriteRead3Bytes(&dwb.b[1]);
 //        Uart.Printf("%A\r", dwb.b, 4, ' ');
         dwb.DWord = __REV(dwb.DWord);
-        PinSet(CS);
-        return dwb.DWord;
+        CsHi();
+        LastData = dwb.DWord;
     }
 
-    MCP3551_t(SPI_TypeDef *ASpi, PortPin_t ACS, PortPin_t AClk, PortPin_t ASDO, PinAF_t ASpiAF) :
-        ISpi(ASpi), CS(ACS), Clk(AClk), SDO(ASDO), SpiAF(ASpiAF), PinIrq(ASDO) {}
+    MCP3551_t(MCP3551Setup_t ASetup) :
+        ISetup(ASetup),
+        PinIrq(ASetup.PGpio, ASetup.Sdo, pudPullUp),
+        LastData(0) {}
 };

@@ -41,23 +41,24 @@
 #define UART_RX_PIN     3
 #define UART_AF         AF7 // for all USARTs
 
-// LEDs GPIO and timer
-#define LED_RED         { GPIOC, 6, TIM3, 1 }
-#define LED_GREEN       { GPIOC, 7, TIM3, 2 }
-#define LED_BLUE        { GPIOC, 8, TIM3, 3 }
-#define LED_WHITE       { GPIOC, 9, TIM3, 4 }
-
 // LCD
 #define LCD_DATA_GPIO   GPIOB
-#define LCD_RESET       { GPIOD, 2 }
-#define LCD_CSX         { GPIOC, 3 }
-#define LCD_DC          { GPIOA, 15 }
-#define LCD_WR          { GPIOC, 5 }
-#define LCD_RD          { GPIOC, 4 }
-#define LCD_TE          { GPIOA, 0 }
+#define LCD_RESET_GPIO  GPIOD
+#define LCD_RESET_PIN   2
+#define LCD_CSX_GPIO    GPIOC
+#define LCD_CSX_PIN     3
+#define LCD_DC_GPIO     GPIOA
+#define LCD_DC_PIN      15
+#define LCD_WR_GPIO     GPIOC
+#define LCD_WR_PIN      5
+#define LCD_RD_GPIO     GPIOC
+#define LCD_RD_PIN      4
+#define LCD_TE_GPIO     GPIOA
+#define LCD_TE_PIN      0
 
 // Touch
-#define TOUCH_INT       { GPIOC, 2 }
+#define TOUCH_INT_GPIO  GPIOC
+#define TOUCH_INT_PIN   2
 
 // I2C
 #define I2C1_GPIO       GPIOB
@@ -72,15 +73,22 @@
 
 #define I2C3_AF         AF4
 
-// ADCs
-#define ADC_H_CS        { GPIOA, 7 }
-#define ADC_H_CLK       { GPIOA, 5 }
-#define ADC_H_SDO       { GPIOA, 6 }
-#define ADC_H_SPI_AF    AF5
-#define ADC_P_CS        { GPIOC, 12 }
-#define ADC_P_CLK       { GPIOC, 10 }
-#define ADC_P_SDO       { GPIOC, 11 }
-#define ADC_P_SPI_AF    AF6
+// ==== ADCs ====
+// GPIO, CS, CLK, SDO, Alterfunc, Spi
+#define ADC_H_SETUP     { GPIOA,  7,  5, 6,  AF5, SPI1 }
+#define ADC_P_SETUP     { GPIOC, 12, 10, 11, AF6, SPI3 }
+
+//#define ADC_H_GPIO      GPIOA
+//#define ADC_H_CS        7
+//#define ADC_H_CLK       5
+//#define ADC_H_SDO       6
+//#define ADC_H_SPI_AF    AF5
+
+//#define ADC_P_GPIO      GPIOC
+//#define ADC_P_CS        12
+//#define ADC_P_CLK       10
+//#define ADC_P_SDO       11
+//#define ADC_P_SPI_AF    AF6
 
 #endif // GPIO
 

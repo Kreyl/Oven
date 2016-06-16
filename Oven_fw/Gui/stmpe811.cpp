@@ -71,7 +71,7 @@ STMPE811_t Touch;
 
 void STMPE811_t::Init() {
     // IRQ pin
-    PinSetupIn(TOUCH_INT, pudPullDown);
+    PinSetupInput(TOUCH_INT_GPIO, TOUCH_INT_PIN, pudPullDown);
     // Reset
     if(Write(STMPE811_SYS_CTRL1, 0x02) != OK) return;
     chThdSleepMilliseconds(5);
@@ -148,4 +148,8 @@ uint8_t STMPE811_t::Read(uint8_t Addr, uint16_t *PData) {
     uint8_t r = I2C_TOUCH.WriteRead(STMPE811_I2C_ADDR, &Addr, 1, (uint8_t*)PData, 2);
     *PData = __REV16(*PData);
     return r;
+}
+
+bool STMPE811_t::IsTouched() {
+    return PinIsHi(TOUCH_INT_GPIO, TOUCH_INT_PIN);
 }
