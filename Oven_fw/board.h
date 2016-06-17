@@ -79,6 +79,7 @@
 
 // Outputs
 #define HEATER_SETUP    { GPIOC, 7, TIM8, 2, invNotInverted, omPushPull, 10000 }
+#define FAN_SETUP       { GPIOC, 6, TIM3, 1, invNotInverted, omPushPull, 100 }
 
 #endif // GPIO
 
@@ -102,6 +103,7 @@
 #define UART            USART2
 #define UART_TX_REG     UART->TDR
 #define UART_RX_REG     UART->RDR
+#define PRINTF_FLOAT_EN TRUE
 #endif
 
 #if ADC_REQUIRED // ======================= Inner ADC ==========================

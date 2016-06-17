@@ -12,6 +12,7 @@ Supported format specifiers:
 %[0][<width>]u - uint
 %[0][<width>]X - uint as hex
 %A - pair (uint8_t *arr, int len) as hex array
+%f - float (if enabled in board.h)
 */
 
 #ifndef ftVoidChar

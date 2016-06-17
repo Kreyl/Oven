@@ -112,10 +112,10 @@ void ILI9341_t::FillWindow(uint32_t Left, uint32_t Top, uint32_t Width, uint32_t
     SetBounds(Left, Top, Width, Height);
     uint32_t Cnt = Width * Height;
     PrepareToWriteGRAM();
-    uint32_t t = TIM5->CNT;
+//    uint32_t t = TIM5->CNT;
     while(Cnt--) WriteData(*Ptr++);
-    uint32_t delta = TIM5->CNT - t;
-    Uart.Printf("t=%u\r", delta);
+//    uint32_t delta = TIM5->CNT - t;
+//    Uart.Printf("t=%u\r", delta);
 }
 
 void ILI9341_t::DrawRect(uint32_t Left, uint32_t Top, uint32_t Width, uint32_t Height, uint16_t Color565) {

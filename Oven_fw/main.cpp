@@ -12,6 +12,7 @@
 #include "board.h"
 #include "gui.h"
 #include "mcp3551.h"
+#include "kl_pid.h"
 
 #define MEASURE_PERIOD_MS   99
 
@@ -19,7 +20,11 @@ App_t App;
 TmrKL_t TmrMeasurement {MS2ST(MEASURE_PERIOD_MS), EVTMSK_MEASURE_TIME, tktPeriodic};
 EE_t ee {&i2c3};
 
+PID_t PidHtr {20, 0, 0};
+
 const PinOutputPWM_t Heater(HEATER_SETUP);
+const PinOutputPWM_t Fan(FAN_SETUP);
+
 extern MCP3551_t AdcHeater;
 extern MCP3551_t AdcPCB;
 
@@ -70,6 +75,8 @@ int main(void) {
 
     Heater.Init();
     Heater.SetFrequencyHz(1);
+    Fan.Init();
+    Fan.SetFrequencyHz(30000);
 
     TmrMeasurement.InitAndStart();
 
@@ -97,8 +104,10 @@ void App_t::ITask() {
         if(EvtMsk & EVTMSK_ADC_HEATER_DONE) {
 //            Uart.Printf("Code: %X\r", AdcCode);
             tHeater = CalcTemperature(AdcHeater.LastData);
+//            Uart.Printf("t=%.1f\r", tHeater);
 //            int32_t T = (int32_t)(tHeater * 10);
-//            Uart.Printf("Htr: %X;  T=%d\r", AdcHeater.LastData, T);
+//            PidHtr
+//            Uart.Printf("%u;%d\r\n", chVTGetSystemTime(), T);
         }
         if(EvtMsk & EVTMSK_ADC_PCB_DONE) {
             tPCB = CalcTemperature(AdcPCB.LastData);
@@ -147,6 +156,14 @@ void App_t::OnCmd(Shell_t *PShell) {
     else if(PCmd->NameIs("Heater")) {
         if(PCmd->GetNextInt32(&dw32) == OK) {
             Heater.Set(dw32);
+            PShell->Ack(OK);
+        }
+        else PShell->Ack(CMD_ERROR);
+    }
+
+    else if(PCmd->NameIs("Fan")) {
+        if(PCmd->GetNextInt32(&dw32) == OK) {
+            Fan.Set(dw32);
             PShell->Ack(OK);
         }
         else PShell->Ack(CMD_ERROR);
