@@ -12,6 +12,7 @@
 class PID_t {
 private:
     float OldErr;   // Required for diff calculations
+    float Integral, MaxI, MinI;
     float TargetValue;
     // PID coeffs. "0" means "disabled".
     float Kp;
@@ -21,11 +22,32 @@ public:
     void SetTarget(float NewTarget) { TargetValue = NewTarget; }
     float Calculate(float NewValue) {
         float Err = TargetValue - NewValue;
-//        Uart.Printf()
+        float Rslt = 0, integ = 0, dif = 0;
         // Proportional
-//        if(
-        OldErr = Err;   // Save current err value
-        return 0;
+        if(Kp != 0) Rslt += Kp * Err;
+        // Integral
+        if(Ki != 0) {
+            Integral += Err;
+            if(Integral > MaxI) Integral = MaxI;
+            else if(Integral < MinI) Integral = MinI;
+            integ = Ki * Integral;
+            Rslt += integ;
+        }
+        // Differential
+        if(Kd != 0) {
+            dif = Kd * (Err - OldErr);
+            Rslt += dif;
+            OldErr = Err;   // Save current err value
+        }
+        // Output limitation
+        if(Rslt > 100) Rslt = 100;
+        else if(Rslt < -100) Rslt = -100;
+//        Uart.Printf("t=%.1f; Err=%.1f; Rslt=%.1f\r\n", NewValue, Err, Rslt);
+        Uart.Printf("%.1f;%.1f;%.1f", NewValue, Err, Rslt);
+        if(Kd != 0) Uart.Printf(";%.1f", dif);
+        if(Ki != 0) Uart.Printf(";%.1f", integ);
+        Uart.Printf("\r\n");
+        return Rslt;
     }
 
     PID_t(float AKp, float AKi, float AKd) :

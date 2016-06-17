@@ -39,6 +39,7 @@ private:
     float tHeater, tPCB;
     float CalcTemperature(uint32_t AdcCode);
     Profiles_t Profiles;
+    bool IsOn = false;
 public:
     void LoadProfiles();
     void SaveProfiles();

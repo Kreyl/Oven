@@ -78,7 +78,8 @@
 #define ADC_P_SETUP     { GPIOC, 12, 10, 11, AF6, SPI3 }
 
 // Outputs
-#define HEATER_SETUP    { GPIOC, 7, TIM8, 2, invNotInverted, omPushPull, 10000 }
+#define HEATER_TOP      10000
+#define HEATER_SETUP    { GPIOC, 7, TIM8, 2, invNotInverted, omPushPull, HEATER_TOP }
 #define FAN_SETUP       { GPIOC, 6, TIM3, 1, invNotInverted, omPushPull, 100 }
 
 #endif // GPIO

@@ -14,13 +14,13 @@
 #include "mcp3551.h"
 #include "kl_pid.h"
 
-#define MEASURE_PERIOD_MS   99
+#define MEASURE_PERIOD_MS   999
 
 App_t App;
 TmrKL_t TmrMeasurement {MS2ST(MEASURE_PERIOD_MS), EVTMSK_MEASURE_TIME, tktPeriodic};
 EE_t ee {&i2c3};
 
-PID_t PidHtr {20, 0, 0};
+PID_t PidHtr {6, 0, 50};
 
 const PinOutputPWM_t Heater(HEATER_SETUP);
 const PinOutputPWM_t Fan(FAN_SETUP);
@@ -75,6 +75,8 @@ int main(void) {
 
     Heater.Init();
     Heater.SetFrequencyHz(1);
+    PidHtr.SetTarget(250);
+
     Fan.Init();
     Fan.SetFrequencyHz(30000);
 
@@ -106,7 +108,17 @@ void App_t::ITask() {
             tHeater = CalcTemperature(AdcHeater.LastData);
 //            Uart.Printf("t=%.1f\r", tHeater);
 //            int32_t T = (int32_t)(tHeater * 10);
-//            PidHtr
+            float HtrPwrPercent = PidHtr.Calculate(tHeater);
+            if(HtrPwrPercent >= 0) {
+                uint32_t HtrPwr = (uint32_t)(HtrPwrPercent / 2);
+                HtrPwr *= 200;
+                if(IsOn) {
+//                    Uart.Printf("Pwr=%u\r", HtrPwr);
+                    Heater.Set(HtrPwr);
+                }
+            }
+            else Heater.Set(0);
+
 //            Uart.Printf("%u;%d\r\n", chVTGetSystemTime(), T);
         }
         if(EvtMsk & EVTMSK_ADC_PCB_DONE) {
@@ -147,7 +159,7 @@ void App_t::SaveProfiles() {
 void App_t::OnCmd(Shell_t *PShell) {
 	Cmd_t *PCmd = &PShell->Cmd;
     __attribute__((unused)) int32_t dw32 = 0;  // May be unused in some configurations
-    Uart.Printf("\r%S\r", PCmd->Name);
+//    Uart.Printf("\r%S\r", PCmd->Name);
     // Handle command
     if(PCmd->NameIs("Ping")) {
         PShell->Ack(OK);
@@ -167,6 +179,12 @@ void App_t::OnCmd(Shell_t *PShell) {
             PShell->Ack(OK);
         }
         else PShell->Ack(CMD_ERROR);
+    }
+
+    else if(PCmd->NameIs("On")) IsOn = true;
+    else if(PCmd->NameIs("Off")) {
+        IsOn = false;
+        Heater.Set(0);
     }
 
     else PShell->Ack(CMD_UNKNOWN);
