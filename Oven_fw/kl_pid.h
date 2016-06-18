@@ -11,7 +11,7 @@
 
 class PID_t {
 private:
-    float OldErr;   // Required for diff calculations
+    float OldValue;   // Required for diff calculations
     float Integral, MaxI, MinI;
     float TargetValue;
     // PID coeffs. "0" means "disabled".
@@ -35,9 +35,9 @@ public:
         }
         // Differential
         if(Kd != 0) {
-            dif = Kd * (Err - OldErr);
+            dif = Kd * (OldValue - NewValue);
             Rslt += dif;
-            OldErr = Err;   // Save current err value
+            OldValue = NewValue;   // Save current value
         }
         // Output limitation
         if(Rslt > 100) Rslt = 100;
@@ -50,7 +50,9 @@ public:
         return Rslt;
     }
 
-    PID_t(float AKp, float AKi, float AKd) :
-        OldErr(0), TargetValue(0),
+    PID_t(float AKp, float AKi, float AMaxI, float AMinI, float AKd) :
+        OldValue(0),
+        Integral(0), MaxI(AMaxI), MinI(AMinI),
+        TargetValue(0),
         Kp(AKp), Ki(AKi), Kd(AKd) {}
 };

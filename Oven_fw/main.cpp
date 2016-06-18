@@ -20,7 +20,8 @@ App_t App;
 TmrKL_t TmrMeasurement {MS2ST(MEASURE_PERIOD_MS), EVTMSK_MEASURE_TIME, tktPeriodic};
 EE_t ee {&i2c3};
 
-PID_t PidHtr {6, 0, 50};
+// Kp,  Ki, MaxI, MinI,  Kd
+PID_t PidHtr {4,  0.1, 250, -250,  80};
 
 const PinOutputPWM_t Heater(HEATER_SETUP);
 const PinOutputPWM_t Fan(FAN_SETUP);
