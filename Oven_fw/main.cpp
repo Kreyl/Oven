@@ -15,12 +15,31 @@
 #include "mcp3551.h"
 #include "kl_pid.h"
 
-#define MEASURE_PERIOD_MS   999
+#define MEASURE_PERIOD_MS   99
 #define HEATER_TOP_T        315 // degrees Centigrade
 
 App_t App;
 TmrKL_t TmrMeasurement {MS2ST(MEASURE_PERIOD_MS), EVTMSK_MEASURE_TIME, tktPeriodic};
 EE_t ee {&i2c3};
+
+template <uint32_t Number>
+class AdcFilter_t {
+private:
+    uint32_t Counter, IValue;
+public:
+    uint8_t PutNewAndCheck(uint32_t NewValue) {
+        IValue += NewValue;
+        Counter++;
+        if(Counter >= Number) return OK;
+        else return BUSY;
+    }
+    uint32_t GetFiltered() {
+        uint32_t Rslt = IValue / Counter;
+        IValue = 0;
+        Counter = 0;
+        return Rslt;
+    }
+};
 
 // Kp,  Ki, MaxI, MinI,  Kd
 PID_t PidHtr {4,  0.1, 300, -300,  80};
@@ -31,6 +50,7 @@ const PinOutputPWM_t Fan(FAN_SETUP);
 
 extern MCP3551_t AdcHeater;
 extern MCP3551_t AdcPCB;
+AdcFilter_t<10> HtrFilter, PcbFilter;
 
 const ThermoProfile_t TPDefault = {
         { 160, 0,  90 },
@@ -107,40 +127,45 @@ void App_t::ITask() {
         }
 
         if(EvtMsk & EVTMSK_ADC_HEATER_DONE) {
-            tHeater = CalcTemperature(AdcHeater.LastData);
-//            Uart.Printf("t=%.1f\r", tHeater);
-            float PwrPercent = PidHtr.Calculate(tHeater);
-            if(PwrPercent >= 0) {
-                PwrByHtrCtrl = (uint32_t)(PwrPercent / 2);   // Granulation 2%
-                PwrByHtrCtrl *= 200;  // 0%...100% -> 0...10000
-                // Select lower pwr setting
-                uint32_t Pwr = (PwrByPcbCtrl < PwrByHtrCtrl)? PwrByPcbCtrl : PwrByHtrCtrl;
-                Heater.Set(Pwr);
-            }
-            else {
-                PwrByHtrCtrl = 0;
-                Heater.Set(0);
-            }
+            // Filter ADC value
+            if(HtrFilter.PutNewAndCheck(AdcHeater.LastData) == OK) {
+                tHeater = CalcTemperature(HtrFilter.GetFiltered());
+    //            Uart.Printf("t=%.1f\r", tHeater);
+                float PwrPercent = PidHtr.Calculate(tHeater);
+                if(PwrPercent >= 0) {
+                    PwrByHtrCtrl = (uint32_t)(PwrPercent / 2);   // Granulation 2%
+                    PwrByHtrCtrl *= 200;  // 0%...100% -> 0...10000
+                    // Select lower pwr setting
+                    uint32_t Pwr = (PwrByPcbCtrl < PwrByHtrCtrl)? PwrByPcbCtrl : PwrByHtrCtrl;
+                    Heater.Set(Pwr);
+                }
+                else {
+                    PwrByHtrCtrl = 0;
+                    Heater.Set(0);
+                }
+            } // if filter done
         }
 
         if(EvtMsk & EVTMSK_ADC_PCB_DONE) {
-            tPCB = CalcTemperature(AdcPCB.LastData);
-//            Uart.Printf("Pcb: %.1f\r", tPCB);
-            float PwrPercent = PidPcb.Calculate(tPCB);
-            if(PwrPercent >= 0) {
-                PwrByPcbCtrl = (uint32_t)(PwrPercent / 2);   // Granulation 2%
-                PwrByPcbCtrl *= 200;  // 0%...100% -> 0...10000
-                // Select lower pwr setting
-                uint32_t Pwr = (PwrByPcbCtrl < PwrByHtrCtrl)? PwrByPcbCtrl : PwrByHtrCtrl;
-                Heater.Set(Pwr);
-            }
-            else {
-                PwrByPcbCtrl = 0;
-                Heater.Set(0);
-            }
-            Uart.Printf("%u; %.1f; %.1f; %.1f\r\n",
+            if(PcbFilter.PutNewAndCheck(AdcPCB.LastData) == OK) {
+                tPCB = CalcTemperature(PcbFilter.GetFiltered());
+    //            Uart.Printf("Pcb: %.1f\r", tPCB);
+                float PwrPercent = PidPcb.Calculate(tPCB);
+                if(PwrPercent >= 0) {
+                    PwrByPcbCtrl = (uint32_t)(PwrPercent / 2);   // Granulation 2%
+                    PwrByPcbCtrl *= 200;  // 0%...100% -> 0...10000
+                    // Select lower pwr setting
+                    uint32_t Pwr = (PwrByPcbCtrl < PwrByHtrCtrl)? PwrByPcbCtrl : PwrByHtrCtrl;
+                    Heater.Set(Pwr);
+                }
+                else {
+                    PwrByPcbCtrl = 0;
+                    Heater.Set(0);
+                }
+                Uart.Printf("%u; %.1f; %.1f; %.1f\r\n",
                     chVTGetSystemTimeX() / 1000,
                     tPCB, tHeater, PwrPercent);
+            } // if filter done
         }
 
         if(EvtMsk & EVTMSK_UART_NEW_CMD) {
@@ -211,9 +236,11 @@ void App_t::OnCmd(Shell_t *PShell) {
 
     else if(PCmd->NameIs("On")) {
         PidPcb.SetTarget(App.WorkTarget);
+        ShowHeaterOn();
     }
     else if(PCmd->NameIs("Off")) {
         PidPcb.SetTarget(0);
+        ShowHeaterOff();
     }
 
     else if(PCmd->NameIs("Target")) {
