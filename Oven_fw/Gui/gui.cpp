@@ -72,10 +72,6 @@ void Gui_t::ITask() {
     } // while true
 }
 
-void OnBtnOk(const Control_t *p) {
-//    Uart.Printf("Ok Detouched\r");
-}
-
 // Grafics
 
 // Button

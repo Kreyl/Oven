@@ -17,7 +17,7 @@
 
 #if 1 // ======== Thermoprofiles ========
 struct ThermoChunk_t {
-    float SpeedMin, SpeedMax;
+//    float SpeedMin, SpeedMax;
     float tEnd;
     uint32_t DurationMinS, DurationMaxS;
 };
@@ -38,12 +38,12 @@ private:
     thread_t *PThread;
     float tHeater, tPCB;
     float CalcTemperature(uint32_t AdcCode);
+    uint32_t PwrByHtrCtrl, PwrByPcbCtrl;
     Profiles_t Profiles;
-    bool IsOn = false;
 public:
+    float WorkTarget = 195;
     void LoadProfiles();
     void SaveProfiles();
-
     // Eternal methods
     void InitThread() { PThread = chThdGetSelfX(); }
     void SignalEvt(eventmask_t Evt) {

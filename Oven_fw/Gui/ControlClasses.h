@@ -42,6 +42,7 @@ public:
 
 typedef void (*ftEvtCb)(const Control_t *p);
 
+// ==== Button ====
 enum BtnState_t {btnPressed, btnReleased};
 
 class Button_t : public Control_t {

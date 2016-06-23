@@ -43,10 +43,11 @@ public:
         if(Rslt > 100) Rslt = 100;
         else if(Rslt < -100) Rslt = -100;
 //        Uart.Printf("t=%.1f; Err=%.1f; Rslt=%.1f\r\n", NewValue, Err, Rslt);
-        Uart.Printf("%.1f;%.1f;%.1f", NewValue, Err, Rslt);
-        if(Kd != 0) Uart.Printf(";%.1f", dif);
-        if(Ki != 0) Uart.Printf(";%.1f", integ);
-        Uart.Printf("\r\n");
+//        Uart.Printf("%.1f;%.1f;%.1f", NewValue, Err, Rslt);
+//        Uart.Printf("%.1f, %.1f", Err, Rslt);
+//        if(Kd != 0) Uart.Printf(" ,%.1f", dif);
+//        if(Ki != 0) Uart.Printf(" ,%.1f", integ);
+//        Uart.Printf("\r\n");
         return Rslt;
     }
 

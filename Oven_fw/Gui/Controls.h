@@ -8,8 +8,8 @@
 #pragma once
 
 // ==== Style ====
-#define BTN_COLOR1  clWhite
-#define BTN_COLOR2  (Color_t){0, 99, 00}
+#define BTN_COLOR1  (Color_t){0, 99, 00}
+#define BTN_COLOR2  (Color_t){0, 27, 00}
 
 const ButtonStyle_t BtnStyleReleased = {
         &fntVerdana27x27, clWhite,   // Text
@@ -30,25 +30,26 @@ const ButtonStyle_t BtnStylePressed = {
 
 #if 1 // ========================== Page 0 =====================================
 // Event callbacks
-extern void OnBtnOk(const Control_t *p);
+extern void OnBtnStart(const Control_t *p);
+extern void OnBtnStop(const Control_t *p);
 
-const Button_t BtnOk {
+const Button_t BtnStart {
     BTN_X0, BTN_Y0, BTN_W, BTN_H,
-    "OK",
+    "Start",
     BtnStyleReleased, BtnStylePressed,
-    OnBtnOk
+    OnBtnStart
 };
 
-const Button_t BtnCancel {
+const Button_t BtnStop {
     BTN_X0, (BTN_Y0 + BTN_H + BTN_DIST), BTN_W, BTN_H,
-    "Cancel",
+    "Stop",
     BtnStyleReleased, BtnStylePressed,
-    nullptr
+    OnBtnStop
 };
 
 const Control_t* __Page0Ctrls[2] = {
-        (Control_t*)&BtnOk,
-        (Control_t*)&BtnCancel,
+        (Control_t*)&BtnStart,
+        (Control_t*)&BtnStop,
 };
 
 const Page_t Page0 {

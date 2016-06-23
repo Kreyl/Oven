@@ -15,13 +15,15 @@
 #include "kl_pid.h"
 
 #define MEASURE_PERIOD_MS   999
+#define HEATER_TOP_T        330 // degrees Centigrade
 
 App_t App;
 TmrKL_t TmrMeasurement {MS2ST(MEASURE_PERIOD_MS), EVTMSK_MEASURE_TIME, tktPeriodic};
 EE_t ee {&i2c3};
 
 // Kp,  Ki, MaxI, MinI,  Kd
-PID_t PidHtr {4,  0.1, 250, -250,  80};
+PID_t PidHtr {4,  0.1, 300, -300,  80};
+PID_t PidPcb {4,  0.05, 300, -300,  80};
 
 const PinOutputPWM_t Heater(HEATER_SETUP);
 const PinOutputPWM_t Fan(FAN_SETUP);
@@ -30,10 +32,10 @@ extern MCP3551_t AdcHeater;
 extern MCP3551_t AdcPCB;
 
 const ThermoProfile_t TPDefault = {
-        { 1,   3, 160, 0,  90 },
-        { 0.5, 1, 180, 0,  160 },
-        { 1,   4, 240, 30, 40 },
-        { -2, -6, 80,  0,  300 }
+        { 160, 0,  90 },
+        { 180, 0,  160 },
+        { 240, 30, 40 },
+        { 80,  0,  300 }
 };
 
 
@@ -63,7 +65,6 @@ int main(void) {
     App.InitThread();
 
     i2c3.Init();    // Touch controller and EEPROM
-//    i2c3.ScanBus();
 
     // Read profiles from EE
     App.LoadProfiles();
@@ -76,7 +77,7 @@ int main(void) {
 
     Heater.Init();
     Heater.SetFrequencyHz(1);
-    PidHtr.SetTarget(250);
+    PidHtr.SetTarget(HEATER_TOP_T); // Do not heat above
 
     Fan.Init();
     Fan.SetFrequencyHz(30000);
@@ -100,32 +101,39 @@ void App_t::ITask() {
         }
 #endif
         if(EvtMsk & EVTMSK_MEASURE_TIME) {
-            AdcHeater.StartMeasurement();
             AdcPCB.StartMeasurement();
+            AdcHeater.StartMeasurement();
         }
 
         if(EvtMsk & EVTMSK_ADC_HEATER_DONE) {
-//            Uart.Printf("Code: %X\r", AdcCode);
             tHeater = CalcTemperature(AdcHeater.LastData);
 //            Uart.Printf("t=%.1f\r", tHeater);
-//            int32_t T = (int32_t)(tHeater * 10);
-            float HtrPwrPercent = PidHtr.Calculate(tHeater);
-            if(HtrPwrPercent >= 0) {
-                uint32_t HtrPwr = (uint32_t)(HtrPwrPercent / 2);
-                HtrPwr *= 200;
-                if(IsOn) {
-//                    Uart.Printf("Pwr=%u\r", HtrPwr);
-                    Heater.Set(HtrPwr);
-                }
+            float PwrPercent = PidHtr.Calculate(tHeater);
+            if(PwrPercent >= 0) {
+                PwrByHtrCtrl = (uint32_t)(PwrPercent / 2);   // Granulation 2%
+                PwrByHtrCtrl *= 200;  // 0%...100% -> 0...10000
+                // Select lower pwr setting
+                uint32_t Pwr = (PwrByPcbCtrl < PwrByHtrCtrl)? PwrByPcbCtrl : PwrByHtrCtrl;
+                Heater.Set(Pwr);
             }
             else Heater.Set(0);
-
-//            Uart.Printf("%u;%d\r\n", chVTGetSystemTime(), T);
         }
+
         if(EvtMsk & EVTMSK_ADC_PCB_DONE) {
             tPCB = CalcTemperature(AdcPCB.LastData);
-//            int32_t T = (int32_t)(tHeater * 10);
-//            Uart.Printf("Pcb: %X;  T=%d\r", AdcCode, T);
+//            Uart.Printf("Pcb: %.1f\r", tPCB);
+            float PwrPercent = PidPcb.Calculate(tPCB);
+            if(PwrPercent >= 0) {
+                PwrByPcbCtrl = (uint32_t)(PwrPercent / 2);   // Granulation 2%
+                PwrByPcbCtrl *= 200;  // 0%...100% -> 0...10000
+                // Select lower pwr setting
+                uint32_t Pwr = (PwrByPcbCtrl < PwrByHtrCtrl)? PwrByPcbCtrl : PwrByHtrCtrl;
+                Heater.Set(Pwr);
+            }
+            else Heater.Set(0);
+            Uart.Printf("%u; %.1f; %.1f; %.1f\r\n",
+                    chVTGetSystemTimeX() / 1000,
+                    tPCB, tHeater, PwrPercent);
         }
 
         if(EvtMsk & EVTMSK_UART_NEW_CMD) {
@@ -156,6 +164,18 @@ void App_t::SaveProfiles() {
     ee.Write(0, &Profiles, sizeof(Profiles));
 }
 
+#if 1 // =========================== Interface =================================
+void OnBtnStart(const Control_t *p) {
+//    Uart.Printf("Ok Detouched\r");
+    Fan.Set(0);
+    PidPcb.SetTarget(App.WorkTarget);
+
+}
+void OnBtnStop(const Control_t *p) {
+    PidPcb.SetTarget(0);
+}
+#endif
+
 #if 1 // ======================= Command processing ============================
 void App_t::OnCmd(Shell_t *PShell) {
 	Cmd_t *PCmd = &PShell->Cmd;
@@ -177,15 +197,22 @@ void App_t::OnCmd(Shell_t *PShell) {
     else if(PCmd->NameIs("Fan")) {
         if(PCmd->GetNextInt32(&dw32) == OK) {
             Fan.Set(dw32);
-            PShell->Ack(OK);
         }
         else PShell->Ack(CMD_ERROR);
     }
 
-    else if(PCmd->NameIs("On")) IsOn = true;
+    else if(PCmd->NameIs("On")) {
+        PidPcb.SetTarget(App.WorkTarget);
+    }
     else if(PCmd->NameIs("Off")) {
-        IsOn = false;
-        Heater.Set(0);
+        PidPcb.SetTarget(0);
+    }
+
+    else if(PCmd->NameIs("Target")) {
+        if(PCmd->GetNextInt32(&dw32) == OK) {
+            App.WorkTarget = dw32;
+        }
+        else PShell->Ack(CMD_ERROR);
     }
 
     else PShell->Ack(CMD_UNKNOWN);
