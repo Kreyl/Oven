@@ -1,3 +1,5 @@
+#pragma once
+
 #include "font.h"
 
 const uint8_t __Verdana27x27[] = {

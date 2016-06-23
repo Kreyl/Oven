@@ -5,17 +5,18 @@
  *      Author: g.kruglov
  */
 
+#include "gui_engine.h"
+#include "interface.h"
 #include "main.h"
 #include "hal.h"
 #include "ee.h"
 #include "i2cL476.h"
 #include "board.h"
-#include "gui.h"
 #include "mcp3551.h"
 #include "kl_pid.h"
 
 #define MEASURE_PERIOD_MS   999
-#define HEATER_TOP_T        330 // degrees Centigrade
+#define HEATER_TOP_T        315 // degrees Centigrade
 
 App_t App;
 TmrKL_t TmrMeasurement {MS2ST(MEASURE_PERIOD_MS), EVTMSK_MEASURE_TIME, tktPeriodic};
@@ -116,7 +117,10 @@ void App_t::ITask() {
                 uint32_t Pwr = (PwrByPcbCtrl < PwrByHtrCtrl)? PwrByPcbCtrl : PwrByHtrCtrl;
                 Heater.Set(Pwr);
             }
-            else Heater.Set(0);
+            else {
+                PwrByHtrCtrl = 0;
+                Heater.Set(0);
+            }
         }
 
         if(EvtMsk & EVTMSK_ADC_PCB_DONE) {
@@ -130,7 +134,10 @@ void App_t::ITask() {
                 uint32_t Pwr = (PwrByPcbCtrl < PwrByHtrCtrl)? PwrByPcbCtrl : PwrByHtrCtrl;
                 Heater.Set(Pwr);
             }
-            else Heater.Set(0);
+            else {
+                PwrByPcbCtrl = 0;
+                Heater.Set(0);
+            }
             Uart.Printf("%u; %.1f; %.1f; %.1f\r\n",
                     chVTGetSystemTimeX() / 1000,
                     tPCB, tHeater, PwrPercent);
@@ -169,10 +176,11 @@ void OnBtnStart(const Control_t *p) {
 //    Uart.Printf("Ok Detouched\r");
     Fan.Set(0);
     PidPcb.SetTarget(App.WorkTarget);
-
+    ShowHeaterOn();
 }
 void OnBtnStop(const Control_t *p) {
     PidPcb.SetTarget(0);
+    ShowHeaterOff();
 }
 #endif
 

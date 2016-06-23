@@ -9,6 +9,7 @@
 #define COLOR_H_
 
 #include "inttypes.h"
+#include <sys/cdefs.h>
 
 // Mixing two colors
 #define ClrMix(C, B, L)     ((C * L + B * (255 - L)) / 255)

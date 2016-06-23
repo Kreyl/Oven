@@ -9,6 +9,7 @@
 
 #include "kl_lib.h"
 #include "kl_buf.h"
+#include "ILI9341.h"
 #include "ControlClasses.h"
 
 #define FRAMEBUFFER_LEN             10000   // 100x100
@@ -25,3 +26,4 @@ public:
 };
 
 extern Gui_t Gui;
+extern ILI9341_t Lcd;

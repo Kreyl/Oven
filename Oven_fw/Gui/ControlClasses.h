@@ -10,27 +10,34 @@
 #include "color.h"
 #include "font.h"
 
+// ==== Theme ====
+struct Theme_t {
+    // Button
+    PFont_t BtnFont;
+    Color_t BtnClrText;
+    Color_t BtnClrReleasedTop, BtnClrReleasedBottom, BtnClrPressedTop, BtnClrPressedBottom;
+    // Textbox
+    PFont_t TxtboxFont;
+    Color_t TxtboxClrText, TxtboxClrBack;
+};
+extern const Theme_t Theme;
+
 enum Justify_t { jstLeft, jstCenter, jstRight };
 
 #if 1 // ==== Classes ====
-enum ControlType_t { ctrlBtn };
-
-// Styles
-struct ButtonStyle_t {
-    PFont_t Font;
-    Color_t ClrText;
-    Color_t ClrTop, ClrBot;
-};
+enum ControlType_t { ctrlBtn, ctrlTextbox };
 
 // Parent class for all controls
 class Control_t {
+protected:
+    void FillRect(Color_t ClrTop, Color_t ClrBottom) const;
 public:
     ControlType_t Type;
     uint16_t Left, Top, Width, Height;
     const char* Text;
     virtual void Draw() const;
-    virtual void CheckTouchAndAct(int32_t x, int32_t y) const;
-    virtual void CheckDetouchAndAct(int32_t x, int32_t y) const;
+//    virtual void CheckTouchAndAct(int32_t x, int32_t y) const;
+//    virtual void CheckDetouchAndAct(int32_t x, int32_t y) const;
     bool IsInside(int32_t x, int32_t y) const {
         return (x >= Left) and (x <= Left+Width) and (y >= Top) and (y <= Top+Height);
     }
@@ -47,7 +54,6 @@ enum BtnState_t {btnPressed, btnReleased};
 
 class Button_t : public Control_t {
 public:
-    const ButtonStyle_t *StyleReleased, *StylePressed;
     void Draw() const { Draw(btnReleased); }
     void Draw(BtnState_t State) const;
     ftEvtCb OnRelease;
@@ -65,22 +71,27 @@ public:
 
     Button_t(uint16_t ALeft, uint16_t ATop, uint16_t AWidth, uint16_t AHeight,
             const char* AText,
-            const ButtonStyle_t &AStyleReleased, const ButtonStyle_t &AStylePressed,
             ftEvtCb AOnRelease) :
                 Control_t(ctrlBtn, ALeft, ATop, AWidth, AHeight, AText),
-                StyleReleased(&AStyleReleased), StylePressed(&AStylePressed),
                 OnRelease(AOnRelease) {}
 };
 
-//class StringBox_t : public Widget_t {
-//public:
-//    Color_t ClrText;
-//    void Draw() const;
-//    StringBox_t(uint16_t ALeft, uint16_t AWidth, uint16_t ATop, uint16_t AHeight,
-//            const char* AText, Color_t AClrText) :
-//                Widget_t(ALeft, AWidth, ATop, AHeight, AText),
-//                ClrText(AClrText) {}
-//};
+// ==== Textbox ====
+class Textbox_t : public Control_t {
+public:
+    void Draw() const;
+    Color_t ClrText, ClrBack;
+    Textbox_t(uint16_t ALeft, uint16_t ATop, uint16_t AWidth, uint16_t AHeight,
+            const char* AText) :
+                Control_t(ctrlTextbox, ALeft, ATop, AWidth, AHeight, AText),
+                ClrText(Theme.TxtboxClrText), ClrBack(Theme.TxtboxClrBack) {}
+    Textbox_t(uint16_t ALeft, uint16_t ATop, uint16_t AWidth, uint16_t AHeight,
+            const char* AText,
+            Color_t AClrText, Color_t AClrBack) :
+                Control_t(ctrlTextbox, ALeft, ATop, AWidth, AHeight, AText),
+                ClrText(AClrText), ClrBack(AClrBack) {}
+
+};
 
 class Page_t {
 public:
@@ -95,15 +106,17 @@ public:
 
     void ProcessTouch(int32_t x, int32_t y) const {
         for(uint32_t i=0; i<CtrlCnt; i++) {
-            const Control_t *PCtrl = Controls[i];
-            PCtrl->CheckTouchAndAct(x, y);
+            if(Controls[i]->Type == ctrlBtn) {
+                ((Button_t*)Controls[i])->CheckTouchAndAct(x, y);
+            }
         }
     }
 
     void ProcessDetouch(int32_t x, int32_t y) const {
         for(uint32_t i=0; i<CtrlCnt; i++) {
-            const Control_t *PCtrl = Controls[i];
-            PCtrl->CheckDetouchAndAct(x, y);
+            if(Controls[i]->Type == ctrlBtn) {
+                ((Button_t*)Controls[i])->CheckDetouchAndAct(x, y);
+            }
         }
     }
 
