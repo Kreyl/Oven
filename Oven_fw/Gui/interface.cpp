@@ -35,8 +35,8 @@ const Textbox_t txtTPcb {
 static char STHtr[7] = "---";
 const Textbox_t txtTHtr {
     TXT_THTR_X0, TXT_T_Y0, TXT_T_W, TXT_T_H,
-    STHtr, &fntVerdana27x27, (Color_t){90, 90, 255}, // Text
-    clBlack                             // Back
+    STHtr, &fntVerdana27x27, clLightBlue,   // Text
+    clBlack                                 // Back
 };
 
 void ShowTPcb(float t) {
@@ -67,8 +67,12 @@ void ShowHeaterOn()  { txtOn.Draw(); }
 void ShowHeaterOff() { txtOff.Draw(); }
 #endif
 
+#if 1 // ========================== Chart ======================================
+Chart_t Chart(0, CHART_TOP, CHART_W_PX, CHART_H_PX, clRed, clLightBlue);
+#endif
+
 #if 1 // ========================== Page 0 =====================================
-#define BTN_W           99
+#define BTN_W           81
 #define BTN_H           63
 #define BTN_DIST        18
 

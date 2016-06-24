@@ -133,3 +133,23 @@ void ILI9341_t::DrawRect(uint32_t Left, uint32_t Top, uint32_t Width, uint32_t H
     PrepareToWriteGRAM();
     while(Cnt--) WriteData(Clr565);
 }
+
+void ILI9341_t::DrawPoint (uint32_t x, uint32_t y, Color_t Color) {
+    SetBounds(x, y, 1, 1);
+    uint16_t Clr565 = Color.RGBTo565();
+    PrepareToWriteGRAM();
+    WriteData(Clr565);
+}
+
+void ILI9341_t::DrawLineHoriz(uint32_t x0, uint32_t y0, uint32_t Len, Color_t Color) {
+    SetBounds(x0, y0, Len, 1);
+    uint16_t Clr565 = Color.RGBTo565();
+    PrepareToWriteGRAM();
+    while(Len--) WriteData(Clr565);
+}
+void ILI9341_t::DrawLineVert (uint32_t x0, uint32_t y0, uint32_t Len, Color_t Color) {
+    SetBounds(x0, y0, 1, Len);
+    uint16_t Clr565 = Color.RGBTo565();
+    PrepareToWriteGRAM();
+    while(Len--) WriteData(Clr565);
+}

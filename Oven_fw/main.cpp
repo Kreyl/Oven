@@ -15,7 +15,7 @@
 #include "mcp3551.h"
 #include "kl_pid.h"
 
-#define MEASURE_PERIOD_MS   99
+#define MEASURE_PERIOD_MS   100
 #define HEATER_TOP_T        315 // degrees Centigrade
 
 App_t App;
@@ -43,7 +43,7 @@ public:
 
 // Kp,  Ki, MaxI, MinI,  Kd
 PID_t PidHtr {4,  0.1, 300, -300,  80};
-PID_t PidPcb {4,  0.05, 300, -300,  80};
+PID_t PidPcb {5,  0.1, 300, -300,  80};
 
 const PinOutputPWM_t Heater(HEATER_SETUP);
 const PinOutputPWM_t Fan(FAN_SETUP);
@@ -92,6 +92,7 @@ int main(void) {
 
     Gui.Init();
     Gui.DrawPage(0);
+    Chart.Reset();
 
     AdcHeater.Init();
     AdcPCB.Init();
@@ -164,9 +165,10 @@ void App_t::ITask() {
                     Heater.Set(0);
                 }
                 ShowTPcb(tPCB);
-                Uart.Printf("%u; %.1f; %.1f; %.1f\r\n",
-                    chVTGetSystemTimeX() / 1000,
-                    tPCB, tHeater, PwrPercent);
+                uint32_t TimemS = (chVTGetSystemTimeX() - TimeStart) / 10;
+                Uart.Printf("%u; %.1f; %.1f; %.1f\r\n", TimemS, tPCB, tHeater, PwrPercent);
+                Chart.AddPoint(0, TimemS, tPCB);
+                Chart.AddPoint(1, TimemS, tHeater);
             } // if filter done
         }
 
@@ -198,16 +200,25 @@ void App_t::SaveProfiles() {
     ee.Write(0, &Profiles, sizeof(Profiles));
 }
 
-#if 1 // =========================== Interface =================================
-void OnBtnStart(const Control_t *p) {
-//    Uart.Printf("Ok Detouched\r");
+void App_t::Start() {
     Fan.Set(0);
-    PidPcb.SetTarget(App.WorkTarget);
+    PidPcb.SetTarget(WorkTarget);
     ShowHeaterOn();
+    Chart.Reset();
+    Chart.AddLineHoriz(WorkTarget, clGrey);
+    TimeStart = chVTGetSystemTimeX();      // reset time counter
 }
-void OnBtnStop(const Control_t *p) {
+void App_t::Stop() {
     PidPcb.SetTarget(0);
     ShowHeaterOff();
+}
+
+#if 1 // =========================== Interface =================================
+void OnBtnStart(const Control_t *p) {
+    App.Start();
+}
+void OnBtnStop(const Control_t *p) {
+    App.Stop();
 }
 #endif
 
@@ -236,14 +247,8 @@ void App_t::OnCmd(Shell_t *PShell) {
         else PShell->Ack(CMD_ERROR);
     }
 
-    else if(PCmd->NameIs("On")) {
-        PidPcb.SetTarget(App.WorkTarget);
-        ShowHeaterOn();
-    }
-    else if(PCmd->NameIs("Off")) {
-        PidPcb.SetTarget(0);
-        ShowHeaterOff();
-    }
+    else if(PCmd->NameIs("On"))  App.Start();
+    else if(PCmd->NameIs("Off")) App.Stop();
 
     else if(PCmd->NameIs("Target")) {
         if(PCmd->GetNextInt32(&dw32) == OK) {

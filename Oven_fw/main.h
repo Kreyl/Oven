@@ -35,6 +35,7 @@ struct Profiles_t {
 
 class App_t {
 private:
+    uint32_t TimeStart;
     thread_t *PThread;
     float tHeater, tPCB;
     float CalcTemperature(uint32_t AdcCode);
@@ -44,6 +45,8 @@ public:
     float WorkTarget = 195;
     void LoadProfiles();
     void SaveProfiles();
+    void Start();
+    void Stop();
     // Eternal methods
     void InitThread() { PThread = chThdGetSelfX(); }
     void SignalEvt(eventmask_t Evt) {

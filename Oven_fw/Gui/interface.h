@@ -14,3 +14,5 @@ void ShowHeaterOff();
 
 void ShowTPcb(float t);
 void ShowTHtr(float t);
+
+extern Chart_t Chart;

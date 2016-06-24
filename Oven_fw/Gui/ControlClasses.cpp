@@ -99,3 +99,52 @@ void Textbox_t::Draw() const {
     DrawText(Left, Top, Width-1, Height-1, Text, Font, jstCenter, ClrText);
     Lcd.FillWindow(Left, Top, Width, Height, FBuf.Buf);
 }
+
+// ================================== Chart ====================================
+void Chart_t::Draw() {
+    Lcd.DrawRect(Left, Top, Width, Height, CHART_BACK_CLR);
+    // Chart bounds
+    Lcd.DrawLineVert(CHART_LEFT, CHART_TOP, CHART_H_PX, clWhite);
+    Lcd.DrawLineVert((CHART_LEFT + CHART_W_PX), CHART_TOP, CHART_H_PX, clWhite);
+    Lcd.DrawLineHoriz(CHART_LEFT, (CHART_TOP + CHART_H_PX), CHART_W_PX, clWhite);
+    Lcd.DrawLineHoriz(CHART_LEFT, CHART_TOP, CHART_W_PX, clWhite);
+}
+
+void Chart_t::Reset() {
+    for(uint32_t i=0; i<SERIES_CNT; i++) Series[i].Reset();
+    Draw();
+}
+
+void Chart_t::AddPoint(uint32_t SerIndx, float x, float y) {
+    Series[SerIndx].AddPoint(x, y);
+}
+
+void Chart_t::AddLineHoriz(float y, Color_t AColor) {
+    float ym = (CHART_TOP + CHART_H_PX) - (y - SERIES_Y_MIN) * Y_SCALE;
+    Lcd.DrawLineHoriz((CHART_LEFT+1), ym, CHART_W_PX, AColor);
+}
+
+
+void Series_t::AddPoint(float x, float y) {
+    // Calculate scaled X
+    if((x - PrevX) >= X_SCALE) {
+        CurrX++;
+        PrevX = x;
+    }
+    if(CurrX < CHART_W_PX) {
+        // Calculate scaled Y
+        float ym = (CHART_TOP + CHART_H_PX) - (y - SERIES_Y_MIN) * Y_SCALE;
+        uint32_t ypx = (uint32_t)ym;
+        if(ypx >= CHART_TOP) Lcd.DrawPoint((CurrX + CHART_LEFT), ypx, Color);
+    }
+//    Uart.Printf("%.1f;%.1f;   %u; %.1f\r", x, y, CurrX, PrevX);
+//    for(int i=0; i<SERIES_LEN; i++) Uart.Printf("%.1f; %.1f\r", IBuf[i].x, IBuf[i].y);
+}
+
+void Series_t::Reset() {
+    Cnt = 0;
+    PrevX = 0;
+    CurrX = 0;
+//    Uart.Printf("%.1f; %.1f\r", XScale, YScale);
+}
+

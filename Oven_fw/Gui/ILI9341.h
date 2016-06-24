@@ -23,5 +23,8 @@ public:
     void Cls(Color_t Color) { DrawRect(0, 0, LCD_W, LCD_H, Color); }
     void DrawRect  (uint32_t Left, uint32_t Top, uint32_t Width, uint32_t Height, Color_t Color);
     void DrawRect  (uint32_t Left, uint32_t Top, uint32_t Width, uint32_t Height, uint16_t Color565);
+    void DrawPoint (uint32_t x, uint32_t y, Color_t Color);
+    void DrawLineHoriz(uint32_t x0, uint32_t y0, uint32_t Len, Color_t Color);
+    void DrawLineVert (uint32_t x0, uint32_t y0, uint32_t Len, Color_t Color);
     void FillWindow(uint32_t Left, uint32_t Top, uint32_t Width, uint32_t Height, uint16_t *Ptr);
 };
