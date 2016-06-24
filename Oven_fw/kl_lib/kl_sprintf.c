@@ -154,3 +154,15 @@ uint32_t kl_vsprintf(ftVoidChar PPutChar, uint32_t MaxLength, const char *format
     End:
     return CharCnt;
 }
+
+
+
+uint32_t kl_bufprint(char *Buf, uint32_t MaxLength, const char *format, ...) {
+    void IPutChar(char c) { *Buf++ = c; }
+    va_list args;
+    va_start(args, format);
+    uint32_t Rslt = kl_vsprintf(IPutChar, MaxLength-1, format, args);
+    va_end(args);
+    *Buf = 0;   // End of string
+    return Rslt;
+}

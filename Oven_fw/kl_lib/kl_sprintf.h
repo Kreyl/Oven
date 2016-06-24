@@ -23,6 +23,7 @@ typedef void(*ftVoidChar)(char);
 extern "C" {
 #endif
 uint32_t kl_vsprintf(ftVoidChar PPutChar, uint32_t MaxLength, const char *format, va_list args);
+uint32_t kl_bufprint(char *Buf, uint32_t MaxLength, const char *format, ...);
 #ifdef __cplusplus
 }
 #endif

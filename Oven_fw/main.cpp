@@ -143,6 +143,7 @@ void App_t::ITask() {
                     PwrByHtrCtrl = 0;
                     Heater.Set(0);
                 }
+                ShowTHtr(tHeater);
             } // if filter done
         }
 
@@ -162,6 +163,7 @@ void App_t::ITask() {
                     PwrByPcbCtrl = 0;
                     Heater.Set(0);
                 }
+                ShowTPcb(tPCB);
                 Uart.Printf("%u; %.1f; %.1f; %.1f\r\n",
                     chVTGetSystemTimeX() / 1000,
                     tPCB, tHeater, PwrPercent);

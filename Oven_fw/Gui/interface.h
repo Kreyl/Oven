@@ -11,3 +11,6 @@
 
 void ShowHeaterOn();
 void ShowHeaterOff();
+
+void ShowTPcb(float t);
+void ShowTHtr(float t);

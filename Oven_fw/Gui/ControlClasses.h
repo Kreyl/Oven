@@ -16,9 +16,6 @@ struct Theme_t {
     PFont_t BtnFont;
     Color_t BtnClrText;
     Color_t BtnClrReleasedTop, BtnClrReleasedBottom, BtnClrPressedTop, BtnClrPressedBottom;
-    // Textbox
-    PFont_t TxtboxFont;
-    Color_t TxtboxClrText, TxtboxClrBack;
 };
 extern const Theme_t Theme;
 
@@ -80,15 +77,14 @@ public:
 class Textbox_t : public Control_t {
 public:
     void Draw() const;
+    PFont_t Font;
     Color_t ClrText, ClrBack;
     Textbox_t(uint16_t ALeft, uint16_t ATop, uint16_t AWidth, uint16_t AHeight,
-            const char* AText) :
-                Control_t(ctrlTextbox, ALeft, ATop, AWidth, AHeight, AText),
-                ClrText(Theme.TxtboxClrText), ClrBack(Theme.TxtboxClrBack) {}
-    Textbox_t(uint16_t ALeft, uint16_t ATop, uint16_t AWidth, uint16_t AHeight,
             const char* AText,
+            PFont_t AFont,
             Color_t AClrText, Color_t AClrBack) :
                 Control_t(ctrlTextbox, ALeft, ATop, AWidth, AHeight, AText),
+                Font(AFont),
                 ClrText(AClrText), ClrBack(AClrBack) {}
 
 };

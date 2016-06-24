@@ -96,6 +96,6 @@ void Textbox_t::Draw() const {
     // Draw shape
     FillRect(ClrBack, ClrBack);
     // Text
-    DrawText(Left, Top, Width-1, Height-1, Text, Theme.TxtboxFont, jstCenter, ClrText);
+    DrawText(Left, Top, Width-1, Height-1, Text, Font, jstCenter, ClrText);
     Lcd.FillWindow(Left, Top, Width, Height, FBuf.Buf);
 }
