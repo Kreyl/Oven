@@ -13,13 +13,12 @@ class PID_t {
 private:
     float OldValue;   // Required for diff calculations
     float Integral, MaxI, MinI;
-    float TargetValue;
     // PID coeffs. "0" means "disabled".
     float Kp;
     float Ki;
     float Kd;
 public:
-    void SetTarget(float NewTarget) { TargetValue = NewTarget; }
+    float TargetValue;
     float Calculate(float NewValue) {
         float Err = TargetValue - NewValue;
         float Rslt = 0, integ = 0, dif = 0;
@@ -54,6 +53,6 @@ public:
     PID_t(float AKp, float AKi, float AMaxI, float AMinI, float AKd) :
         OldValue(0),
         Integral(0), MaxI(AMaxI), MinI(AMinI),
-        TargetValue(0),
-        Kp(AKp), Ki(AKi), Kd(AKd) {}
+        Kp(AKp), Ki(AKi), Kd(AKd),
+        TargetValue(0) {}
 };

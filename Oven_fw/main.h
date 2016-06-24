@@ -16,20 +16,33 @@
 #define APP_NAME            "Oven"
 
 #if 1 // ======== Thermoprofiles ========
+#define T_PRECISION     4.0   // degrees
 struct ThermoChunk_t {
-//    float SpeedMin, SpeedMax;
     float tEnd;
-    uint32_t DurationMinS, DurationMaxS;
+    uint32_t DurationS;
 };
 
-struct ThermoProfile_t {
+class ThermoProfile_t {
+private:
     ThermoChunk_t Preheat, Soak, Reflow, Cooling;
-};
-
-#define PROFILES_CNT_MAX    4
-struct Profiles_t {
-    uint32_t Cnt;
-    ThermoProfile_t Prof[PROFILES_CNT_MAX];
+    bool TargetReached;
+    uint32_t TimeStart;
+    ThermoChunk_t *Curr;
+public:
+    uint8_t CalcTargetT(uint32_t TimemS, float CurrT, float *TargetT);
+    void Reset() {
+        Curr = &Preheat;
+        TargetReached = false;
+    }
+    ThermoProfile_t(
+            ThermoChunk_t APreheat,
+            ThermoChunk_t ASoak,
+            ThermoChunk_t AReflow,
+            ThermoChunk_t ACooling) :
+                Preheat(APreheat), Soak(ASoak), Reflow(AReflow), Cooling(ACooling),
+                TargetReached(false), TimeStart(0),
+                Curr(&Preheat)
+    {}
 };
 #endif
 
@@ -40,9 +53,8 @@ private:
     float tHeater, tPCB;
     float CalcTemperature(uint32_t AdcCode);
     uint32_t PwrByHtrCtrl, PwrByPcbCtrl;
-    Profiles_t Profiles;
+    bool IsOn = false;
 public:
-    float WorkTarget = 195;
     void LoadProfiles();
     void SaveProfiles();
     void Start();

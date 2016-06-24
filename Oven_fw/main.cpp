@@ -52,11 +52,11 @@ extern MCP3551_t AdcHeater;
 extern MCP3551_t AdcPCB;
 AdcFilter_t<10> HtrFilter, PcbFilter;
 
-const ThermoProfile_t TPDefault = {
-        { 160, 0,  90 },
-        { 180, 0,  160 },
-        { 240, 30, 40 },
-        { 80,  0,  300 }
+ThermoProfile_t TProfile = {
+        { 150, 60 },
+        { 180, 90 },
+        { 200, 30 },
+        { 80,  20 }
 };
 
 
@@ -88,7 +88,7 @@ int main(void) {
     i2c3.Init();    // Touch controller and EEPROM
 
     // Read profiles from EE
-    App.LoadProfiles();
+//    App.LoadProfiles();
 
     Gui.Init();
     Gui.DrawPage(0);
@@ -99,7 +99,7 @@ int main(void) {
 
     Heater.Init();
     Heater.SetFrequencyHz(1);
-    PidHtr.SetTarget(HEATER_TOP_T); // Do not heat above
+    PidHtr.TargetValue = HEATER_TOP_T; // Do not heat above
 
     Fan.Init();
     Fan.SetFrequencyHz(30000);
@@ -151,21 +151,37 @@ void App_t::ITask() {
         if(EvtMsk & EVTMSK_ADC_PCB_DONE) {
             if(PcbFilter.PutNewAndCheck(AdcPCB.LastData) == OK) {
                 tPCB = CalcTemperature(PcbFilter.GetFiltered());
-    //            Uart.Printf("Pcb: %.1f\r", tPCB);
-                float PwrPercent = PidPcb.Calculate(tPCB);
-                if(PwrPercent >= 0) {
-                    PwrByPcbCtrl = (uint32_t)(PwrPercent / 2);   // Granulation 2%
-                    PwrByPcbCtrl *= 200;  // 0%...100% -> 0...10000
-                    // Select lower pwr setting
-                    uint32_t Pwr = (PwrByPcbCtrl < PwrByHtrCtrl)? PwrByPcbCtrl : PwrByHtrCtrl;
-                    Heater.Set(Pwr);
-                }
+                uint32_t TimemS = (chVTGetSystemTimeX() - TimeStart) / 10;
+                float PwrPercent = 0;
+                if(IsOn) {
+        //            Uart.Printf("Pcb: %.1f\r", tPCB);
+                    float tToSet;
+                    if(TProfile.CalcTargetT(TimemS, tPCB, &tToSet) == LAST) App.Stop();
+                    else { // OK or NEW, i.e. proceed
+                        if(tToSet != PidPcb.TargetValue) {
+                            PidPcb.TargetValue = tToSet;
+                            Chart.AddLineHoriz(tToSet, clGrey);
+                        }
+                        PwrPercent = PidPcb.Calculate(tPCB);
+                        if(PwrPercent >= 0) {
+                            PwrByPcbCtrl = (uint32_t)(PwrPercent / 2);   // Granulation 2%
+                            PwrByPcbCtrl *= 200;  // 0%...100% -> 0...10000
+                            // Select lower pwr setting
+                            uint32_t Pwr = (PwrByPcbCtrl < PwrByHtrCtrl)? PwrByPcbCtrl : PwrByHtrCtrl;
+                            Heater.Set(Pwr);
+                        }
+                        else {
+                            PwrByPcbCtrl = 0;
+                            Heater.Set(0);
+                        }
+                    } // ret == OK
+                } // if on
                 else {
                     PwrByPcbCtrl = 0;
                     Heater.Set(0);
                 }
+
                 ShowTPcb(tPCB);
-                uint32_t TimemS = (chVTGetSystemTimeX() - TimeStart) / 10;
                 Uart.Printf("%u; %.1f; %.1f; %.1f\r\n", TimemS, tPCB, tHeater, PwrPercent);
                 Chart.AddPoint(0, TimemS, tPCB);
                 Chart.AddPoint(1, TimemS, tHeater);
@@ -186,31 +202,77 @@ float App_t::CalcTemperature(uint32_t AdcCode) {
     return (R - 100)/0.385; // 100R at 0C, 0.385 ohm/degree
 }
 
-void App_t::LoadProfiles() {
-    ee.Read(0, &Profiles.Cnt, 4);
-//    Uart.Printf("ProfCnt = %u\r", Profiles.Cnt);
-    if(Profiles.Cnt == 0 or Profiles.Cnt > PROFILES_CNT_MAX) {
-        Profiles.Cnt = 1;
-        Profiles.Prof[0] = TPDefault;
-        SaveProfiles();
-    }
-}
-
-void App_t::SaveProfiles() {
-    ee.Write(0, &Profiles, sizeof(Profiles));
-}
+//void App_t::LoadProfiles() {
+//    ee.Read(0, &Profiles.Cnt, 4);
+////    Uart.Printf("ProfCnt = %u\r", Profiles.Cnt);
+//    if(Profiles.Cnt == 0 or Profiles.Cnt > PROFILES_CNT_MAX) {
+//        Profiles.Cnt = 1;
+//        Profiles.Prof[0] = TPDefault;
+//        SaveProfiles();
+//    }
+//}
+//
+//void App_t::SaveProfiles() {
+//    ee.Write(0, &Profiles, sizeof(Profiles));
+//}
 
 void App_t::Start() {
     Fan.Set(0);
-    PidPcb.SetTarget(WorkTarget);
+    TProfile.Reset();
     ShowHeaterOn();
     Chart.Reset();
-    Chart.AddLineHoriz(WorkTarget, clGrey);
+    IsOn = true;
+    //Chart.AddLineHoriz(WorkTarget, clGrey);
     TimeStart = chVTGetSystemTimeX();      // reset time counter
 }
 void App_t::Stop() {
-    PidPcb.SetTarget(0);
+    PidPcb.TargetValue = 0;
     ShowHeaterOff();
+    IsOn = false;
+}
+
+// Thermoprofile
+uint8_t ThermoProfile_t::CalcTargetT(uint32_t TimemS, float CurrT, float *TargetT) {
+    // Calculate current chunk
+//    uint32_t Ts = TimemS / 1000;
+//    if(Ts <= Preheat.DurationS) {
+//        Curr = &Preheat;
+//    }
+//    else if(Ts <= (Preheat.DurationS + Soak.DurationS)) {
+//        Curr = &Soak;
+//        Ts -= Preheat.DurationS;    // Calculate time within chunk
+//    }
+//    else if(Ts <= (Preheat.DurationS + Soak.DurationS + Reflow.DurationS)) {
+//        Curr = &Reflow;
+//        Ts -= Preheat.DurationS + Soak.DurationS;
+//    }
+//    else {
+//        Curr = &Cooling;
+//        Ts -= Preheat.DurationS + Soak.DurationS + Reflow.DurationS;
+//    }
+    uint8_t Rslt = OK;
+    if(TargetReached) {
+        uint32_t Ts = TimemS / 1000;
+        Ts -= TimeStart;
+        // Check if time to go to next chunk
+        if(Ts >= Curr->DurationS) {
+            if(Curr == &Cooling) Rslt = LAST;  // cooling completed
+            else {
+                Curr++;
+                TargetReached = false;
+                Rslt = NEW;
+            } // if not curr
+        } // if enough time
+    } // if reached
+    else {
+        if(CurrT >= (Curr->tEnd - T_PRECISION) and CurrT <= (Curr->tEnd + T_PRECISION)) {
+            // Target temperature reached
+            TargetReached = true;
+            TimeStart = TimemS / 1000;  // Start time count
+        }
+    }
+    *TargetT = Curr->tEnd;
+    return Rslt;
 }
 
 #if 1 // =========================== Interface =================================
@@ -250,12 +312,12 @@ void App_t::OnCmd(Shell_t *PShell) {
     else if(PCmd->NameIs("On"))  App.Start();
     else if(PCmd->NameIs("Off")) App.Stop();
 
-    else if(PCmd->NameIs("Target")) {
-        if(PCmd->GetNextInt32(&dw32) == OK) {
-            App.WorkTarget = dw32;
-        }
-        else PShell->Ack(CMD_ERROR);
-    }
+//    else if(PCmd->NameIs("Target")) {
+//        if(PCmd->GetNextInt32(&dw32) == OK) {
+//            App.WorkTarget = dw32;
+//        }
+//        else PShell->Ack(CMD_ERROR);
+//    }
 
     else PShell->Ack(CMD_UNKNOWN);
 }

@@ -131,6 +131,7 @@ public:
     void Reset();
     void AddPoint(uint32_t SerIndx, float x, float y);
     void AddLineHoriz(float y, Color_t AColor);
+    void AddLineVert(float x, Color_t AColor);
     Chart_t(uint16_t ALeft, uint16_t ATop, uint16_t AWidth, uint16_t AHeight,
             Color_t AColor1, Color_t AColor2) :
         Left(ALeft), Top(ATop), Width(AWidth), Height(AHeight)
