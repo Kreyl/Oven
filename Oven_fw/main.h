@@ -54,6 +54,7 @@ private:
     float CalcTemperature(uint32_t AdcCode);
     uint32_t PwrByHtrCtrl, PwrByPcbCtrl;
     bool IsOn = false;
+    void CheckIfFanRequired(float tPCB, float tRequired);
 public:
     void LoadProfiles();
     void SaveProfiles();

@@ -96,8 +96,8 @@ public:
 #define CHART_BACK_CLR  clBlack
 
 #define SERIES_CNT      2
-#define SERIES_Y_MIN    20
-#define SERIES_Y_MAX    220
+#define SERIES_Y_MIN    30
+#define SERIES_Y_MAX    260
 
 #define X_SCALE         ((float)(CHART_W_MS / CHART_W_PX))
 #define Y_SCALE         ((float)CHART_H_PX / (float)(SERIES_Y_MAX - SERIES_Y_MIN))

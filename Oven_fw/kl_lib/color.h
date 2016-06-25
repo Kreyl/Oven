@@ -104,6 +104,7 @@ static uint16_t ColorBlend(Color_t fg, Color_t bg, uint16_t alpha) {
 #define clLightBlue ((Color_t){90, 90, 255})
 
 #define clGrey      ((Color_t){126, 126, 126})
+#define clLightGrey ((Color_t){180, 180, 180})
 #define clDarkGrey  ((Color_t){54, 54, 54})
 
 #if 0 // ============================ Color table ==============================

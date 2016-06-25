@@ -20,10 +20,11 @@ const Theme_t Theme = {
 
 #if 1 // ========================== Global =====================================
 #define TXT_T_H         36
-#define TXT_T_W         72
+#define TXT_T_W         75
 #define TXT_T_Y0        0
 #define TXT_TPCB_X0     0
 #define TXT_THTR_X0     (TXT_TPCB_X0 + TXT_T_W + 9)
+#define TXT_TIME_X0     (TXT_THTR_X0 + TXT_T_W + 9)
 
 static char STPcb[7] = "---";
 const Textbox_t txtTPcb {
@@ -39,6 +40,13 @@ const Textbox_t txtTHtr {
     clBlack                                 // Back
 };
 
+static char STime[7] = "---";
+const Textbox_t txtTime {
+    TXT_TIME_X0, TXT_T_Y0, TXT_T_W, TXT_T_H,
+    STime, &fntVerdana27x27, clLightGrey,   // Text
+    clBlack                                 // Back
+};
+
 void ShowTPcb(float t) {
     kl_bufprint(STPcb, 7, "%.1f", t);
     txtTPcb.Draw();
@@ -47,6 +55,11 @@ void ShowTHtr(float t) {
     kl_bufprint(STHtr, 7, "%.1f", t);
     txtTHtr.Draw();
 }
+void ShowTime(uint32_t Tms) {
+    kl_bufprint(STime, 7, "%u", Tms/1000);
+    txtTime.Draw();
+}
+
 
 #define TXT_ONOFF_W     63
 #define TXT_ONOFF_H     36
@@ -101,6 +114,7 @@ const Control_t* __Page0Ctrls[] = {
         (Control_t*)&txtOff,    // Show OFF txt
         (Control_t*)&txtTPcb,
         (Control_t*)&txtTHtr,
+        (Control_t*)&txtTime,
 };
 
 const Page_t PagePreheat = { __Page0Ctrls, countof(__Page0Ctrls) };

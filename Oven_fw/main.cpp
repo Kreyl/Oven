@@ -53,9 +53,9 @@ extern MCP3551_t AdcPCB;
 AdcFilter_t<10> HtrFilter, PcbFilter;
 
 ThermoProfile_t TProfile = {
-        { 150, 60 },
-        { 180, 90 },
-        { 200, 30 },
+        { 140, 60 },
+        { 170, 90 },
+        { 190, 30 },
         { 80,  20 }
 };
 
@@ -123,8 +123,8 @@ void App_t::ITask() {
         }
 #endif
         if(EvtMsk & EVTMSK_MEASURE_TIME) {
-            AdcPCB.StartMeasurement();
             AdcHeater.StartMeasurement();
+            AdcPCB.StartMeasurement();
         }
 
         if(EvtMsk & EVTMSK_ADC_HEATER_DONE) {
@@ -144,7 +144,6 @@ void App_t::ITask() {
                     PwrByHtrCtrl = 0;
                     Heater.Set(0);
                 }
-                ShowTHtr(tHeater);
             } // if filter done
         }
 
@@ -174,15 +173,18 @@ void App_t::ITask() {
                             PwrByPcbCtrl = 0;
                             Heater.Set(0);
                         }
+                        CheckIfFanRequired(tPCB, tToSet);   // Fan
                     } // ret == OK
                 } // if on
                 else {
                     PwrByPcbCtrl = 0;
                     Heater.Set(0);
                 }
-
-                ShowTPcb(tPCB);
+                // Show everything
                 Uart.Printf("%u; %.1f; %.1f; %.1f\r\n", TimemS, tPCB, tHeater, PwrPercent);
+                ShowTPcb(tPCB);
+                ShowTHtr(tHeater);
+                if(IsOn) ShowTime(TimemS);
                 Chart.AddPoint(0, TimemS, tPCB);
                 Chart.AddPoint(1, TimemS, tHeater);
             } // if filter done
@@ -200,6 +202,13 @@ float App_t::CalcTemperature(uint32_t AdcCode) {
     float Code = AdcCode & 0x3FFFFF;   // Clear MS bits;
     float R = 10000 * (Code / ((1<<20) - Code));
     return (R - 100)/0.385; // 100R at 0C, 0.385 ohm/degree
+}
+
+void App_t::CheckIfFanRequired(float tPCB, float tRequired) {
+    if     (tPCB > tRequired + 11) Fan.Set(100);
+    else if(tPCB > tRequired + 9 ) Fan.Set(70);
+    else if(tPCB > tRequired + 4 ) Fan.Set(50);
+    else Fan.Set(0);
 }
 
 //void App_t::LoadProfiles() {
@@ -228,6 +237,7 @@ void App_t::Start() {
 void App_t::Stop() {
     PidPcb.TargetValue = 0;
     ShowHeaterOff();
+    Fan.Set(0);
     IsOn = false;
 }
 
