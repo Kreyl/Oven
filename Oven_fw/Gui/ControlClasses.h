@@ -10,15 +10,6 @@
 #include "color.h"
 #include "font.h"
 
-// ==== Theme ====
-struct Theme_t {
-    // Button
-    PFont_t BtnFont;
-    Color_t BtnClrText;
-    Color_t BtnClrReleasedTop, BtnClrReleasedBottom, BtnClrPressedTop, BtnClrPressedBottom;
-};
-extern const Theme_t Theme;
-
 enum Justify_t { jstLeft, jstCenter, jstRight };
 
 #if 1 // ==== Classes ====
@@ -32,14 +23,18 @@ public:
     ControlType_t Type;
     uint16_t Left, Top, Width, Height;
     const char* Text;
+    PFont_t Font;
+    Color_t ClrText;
     virtual void Draw() const;
     bool IsInside(int32_t x, int32_t y) const {
         return (x >= Left) and (x <= Left+Width) and (y >= Top) and (y <= Top+Height);
     }
     Control_t(ControlType_t AType,
-            uint16_t ALeft, uint16_t ATop, uint16_t AWidth, uint16_t AHeight, const char* AText) :
+            uint16_t ALeft, uint16_t ATop, uint16_t AWidth, uint16_t AHeight,
+            const char* AText, PFont_t AFont, Color_t AClrText) :
                 Type(AType),
-                Left(ALeft), Top(ATop), Width(AWidth), Height(AHeight), Text(AText) {}
+                Left(ALeft), Top(ATop), Width(AWidth), Height(AHeight),
+                Text(AText), Font(AFont), ClrText(AClrText)  {}
 };
 
 typedef void (*ftEvtCb)(const Control_t *p);
@@ -48,14 +43,14 @@ typedef void (*ftEvtCb)(const Control_t *p);
 enum BtnState_t {btnPressed, btnReleased};
 
 class Button_t : public Control_t {
+private:
+    Color_t ClrReleasedTop, ClrReleasedBottom, ClrPressedTop, ClrPressedBottom;
 public:
     void Draw() const { Draw(btnReleased); }
     void Draw(BtnState_t State) const;
     ftEvtCb OnRelease;
     void CheckTouchAndAct(int32_t x, int32_t y) const {
-        if(IsInside(x, y)) {
-            Draw(btnPressed);
-        }
+        if(IsInside(x, y)) Draw(btnPressed);
     }
     void CheckDetouchAndAct(int32_t x, int32_t y) const {
         if(IsInside(x, y)) {
@@ -65,9 +60,13 @@ public:
     }
 
     Button_t(uint16_t ALeft, uint16_t ATop, uint16_t AWidth, uint16_t AHeight,
-            const char* AText,
+            const char* AText, PFont_t AFont, Color_t AClrText,
+            Color_t AClrReleasedTop, Color_t AClrReleasedBottom,
+            Color_t AClrPressedTop,  Color_t AClrPressedBottom,
             ftEvtCb AOnRelease) :
-                Control_t(ctrlBtn, ALeft, ATop, AWidth, AHeight, AText),
+                Control_t(ctrlBtn, ALeft, ATop, AWidth, AHeight, AText, AFont, AClrText),
+                ClrReleasedTop(AClrReleasedTop), ClrReleasedBottom(AClrReleasedBottom),
+                ClrPressedTop(AClrPressedTop),   ClrPressedBottom(AClrPressedBottom),
                 OnRelease(AOnRelease) {}
 };
 
@@ -75,15 +74,13 @@ public:
 class Textbox_t : public Control_t {
 public:
     void Draw() const;
-    PFont_t Font;
-    Color_t ClrText, ClrBack;
+    Color_t ClrBack;
     Textbox_t(uint16_t ALeft, uint16_t ATop, uint16_t AWidth, uint16_t AHeight,
             const char* AText,
             PFont_t AFont,
             Color_t AClrText, Color_t AClrBack) :
-                Control_t(ctrlTextbox, ALeft, ATop, AWidth, AHeight, AText),
-                Font(AFont),
-                ClrText(AClrText), ClrBack(AClrBack) {}
+                Control_t(ctrlBtn, ALeft, ATop, AWidth, AHeight, AText, AFont, AClrText),
+                ClrBack(AClrBack) {}
 
 };
 

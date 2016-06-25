@@ -11,12 +11,13 @@
 #include "kl_sprintf.h"
 
 // ==== Theme ====
-const Theme_t Theme = {
-        // Button
-        &fntVerdana27x27, clWhite,   // Text
-        (Color_t){0, 99, 00}, (Color_t){0, 27, 00}, // Released Top/Bottom
-        (Color_t){0, 27, 00}, (Color_t){0, 99, 00}, // Pressed Top/Bottom
-};
+// Button
+#define BTN_FNT             &fntVerdana27x27
+#define BTN_CLR_TXT         clWhite
+#define BTN_CLR_REL_TOP     (Color_t){0, 99, 00}
+#define BTN_CLR_REL_BOT     (Color_t){0, 27, 00}
+#define BTN_CLR_PRS_TOP     (Color_t){0, 27, 00}
+#define BTN_CLR_PRS_BOT     (Color_t){0, 99, 00}
 
 #if 1 // ========================== Global =====================================
 #define TXT_T_H         36
@@ -60,7 +61,6 @@ void ShowTime(uint32_t Tms) {
     txtTime.Draw();
 }
 
-
 #define TXT_ONOFF_W     63
 #define TXT_ONOFF_H     36
 #define TXT_ONOFF_X0    (LCD_W - TXT_ONOFF_W)
@@ -98,13 +98,15 @@ extern void OnBtnStop(const Control_t *p);
 
 const Button_t BtnStart {
     BTN_X0, BTN_Y0, BTN_W, BTN_H,
-    "Start",
+    "Start", BTN_FNT, BTN_CLR_TXT,
+    BTN_CLR_REL_TOP, BTN_CLR_REL_BOT, BTN_CLR_PRS_TOP, BTN_CLR_PRS_BOT,
     OnBtnStart
 };
 
 const Button_t BtnStop {
     BTN_X0, (BTN_Y0 + BTN_H + BTN_DIST), BTN_W, BTN_H,
-    "Stop",
+    "Stop", BTN_FNT, BTN_CLR_TXT,
+    BTN_CLR_REL_TOP, BTN_CLR_REL_BOT, BTN_CLR_PRS_TOP, BTN_CLR_PRS_BOT,
     OnBtnStop
 };
 

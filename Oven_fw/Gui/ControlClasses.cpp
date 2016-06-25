@@ -76,13 +76,9 @@ void Button_t::Draw(BtnState_t State) const {
         return;
     }
     // Draw shape depending on state
-    if(State == btnReleased) {
-        FillRect(Theme.BtnClrReleasedTop, Theme.BtnClrReleasedBottom);
-    }
-    else {
-        FillRect(Theme.BtnClrPressedTop, Theme.BtnClrPressedBottom);
-    }
-    DrawText(Left, Top, Width-1, Height-1, Text, Theme.BtnFont, jstCenter, Theme.BtnClrText);
+    if(State == btnReleased) FillRect(ClrReleasedTop, ClrReleasedBottom);
+    else FillRect(ClrPressedTop, ClrPressedBottom);
+    DrawText(Left, Top, Width-1, Height-1, Text, Font, jstCenter, ClrText);
     Lcd.FillWindow(Left, Top, Width, Height, FBuf.Buf);
 }
 
