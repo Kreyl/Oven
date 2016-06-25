@@ -16,4 +16,7 @@ void ShowTPcb(float t);
 void ShowTHtr(float t);
 void ShowTime(uint32_t Tms);
 
+void ShowFanStatus(bool IsOn);
+void ShowTHtrManual(float t);
+
 extern Chart_t Chart;

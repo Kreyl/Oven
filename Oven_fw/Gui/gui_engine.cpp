@@ -36,7 +36,8 @@ void Gui_t::Init() {
 
 void Gui_t::DrawPage(uint8_t APage) {
     Lcd.Cls(clBlack);
-    Page[0]->Draw();
+    CurrPage = Page[APage];
+    Page[APage]->Draw();
 }
 
 __noreturn

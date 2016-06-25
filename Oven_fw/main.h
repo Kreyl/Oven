@@ -46,20 +46,25 @@ public:
 };
 #endif
 
+enum Mode_t { modeProfile, modeManual };
+
 class App_t {
 private:
     uint32_t TimeStart;
     thread_t *PThread;
-    float tHeater, tPCB;
+    float tHtr, tPCB;
     float CalcTemperature(uint32_t AdcCode);
     uint32_t PwrByHtrCtrl, PwrByPcbCtrl;
     bool IsOn = false;
+    Mode_t Mode = modeManual;
     void CheckIfFanRequired(float tPCB, float tRequired);
 public:
+    float tHtrManual = 180;
     void LoadProfiles();
     void SaveProfiles();
     void Start();
     void Stop();
+    void OnBtnMode();
     // Eternal methods
     void InitThread() { PThread = chThdGetSelfX(); }
     void SignalEvt(eventmask_t Evt) {

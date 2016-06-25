@@ -79,7 +79,7 @@ public:
             const char* AText,
             PFont_t AFont,
             Color_t AClrText, Color_t AClrBack) :
-                Control_t(ctrlBtn, ALeft, ATop, AWidth, AHeight, AText, AFont, AClrText),
+                Control_t(ctrlTextbox, ALeft, ATop, AWidth, AHeight, AText, AFont, AClrText),
                 ClrBack(AClrBack) {}
 
 };

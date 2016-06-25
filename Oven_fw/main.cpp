@@ -91,8 +91,7 @@ int main(void) {
 //    App.LoadProfiles();
 
     Gui.Init();
-    Gui.DrawPage(0);
-    Chart.Reset();
+    Gui.DrawPage(1);
 
     AdcHeater.Init();
     AdcPCB.Init();
@@ -130,9 +129,9 @@ void App_t::ITask() {
         if(EvtMsk & EVTMSK_ADC_HEATER_DONE) {
             // Filter ADC value
             if(HtrFilter.PutNewAndCheck(AdcHeater.LastData) == OK) {
-                tHeater = CalcTemperature(HtrFilter.GetFiltered());
+                tHtr = CalcTemperature(HtrFilter.GetFiltered());
     //            Uart.Printf("t=%.1f\r", tHeater);
-                float PwrPercent = PidHtr.Calculate(tHeater);
+                float PwrPercent = PidHtr.Calculate(tHtr);
                 if(PwrPercent >= 0) {
                     PwrByHtrCtrl = (uint32_t)(PwrPercent / 2);   // Granulation 2%
                     PwrByHtrCtrl *= 200;  // 0%...100% -> 0...10000
@@ -181,12 +180,14 @@ void App_t::ITask() {
                     Heater.Set(0);
                 }
                 // Show everything
-                Uart.Printf("%u; %.1f; %.1f; %.1f\r\n", TimemS, tPCB, tHeater, PwrPercent);
+                Uart.Printf("%u; %.1f; %.1f; %.1f\r\n", TimemS, tPCB, tHtr, PwrPercent);
                 ShowTPcb(tPCB);
-                ShowTHtr(tHeater);
-                if(IsOn) ShowTime(TimemS);
-                Chart.AddPoint(0, TimemS, tPCB);
-                Chart.AddPoint(1, TimemS, tHeater);
+                ShowTHtr(tHtr);
+                if(Mode == modeProfile) {
+                    if(IsOn) ShowTime(TimemS);
+                    Chart.AddPoint(0, TimemS, tPCB);
+                    Chart.AddPoint(1, TimemS, tHtr);
+                }
             } // if filter done
         }
 
@@ -243,23 +244,6 @@ void App_t::Stop() {
 
 // Thermoprofile
 uint8_t ThermoProfile_t::CalcTargetT(uint32_t TimemS, float CurrT, float *TargetT) {
-    // Calculate current chunk
-//    uint32_t Ts = TimemS / 1000;
-//    if(Ts <= Preheat.DurationS) {
-//        Curr = &Preheat;
-//    }
-//    else if(Ts <= (Preheat.DurationS + Soak.DurationS)) {
-//        Curr = &Soak;
-//        Ts -= Preheat.DurationS;    // Calculate time within chunk
-//    }
-//    else if(Ts <= (Preheat.DurationS + Soak.DurationS + Reflow.DurationS)) {
-//        Curr = &Reflow;
-//        Ts -= Preheat.DurationS + Soak.DurationS;
-//    }
-//    else {
-//        Curr = &Cooling;
-//        Ts -= Preheat.DurationS + Soak.DurationS + Reflow.DurationS;
-//    }
     uint8_t Rslt = OK;
     if(TargetReached) {
         uint32_t Ts = TimemS / 1000;
@@ -292,6 +276,45 @@ void OnBtnStart(const Control_t *p) {
 void OnBtnStop(const Control_t *p) {
     App.Stop();
 }
+void OnBtnMode(const Control_t *p) { App.OnBtnMode(); }
+void App_t::OnBtnMode() {
+    if(Mode == modeProfile) {
+        Mode = modeManual;
+        Gui.DrawPage(1);
+    }
+    else {
+        Mode = modeProfile;
+        Gui.DrawPage(0);
+    }
+}
+
+void OnBtnFan(const Control_t *p) {
+    static bool FanIsOn = false;
+    if(FanIsOn) {
+        FanIsOn = false;
+        Fan.Set(0);
+    }
+    else {
+        FanIsOn = true;
+        Fan.Set(100);
+    }
+    ShowFanStatus(FanIsOn);
+}
+
+// Manual heater control
+void OnBtnHeater(const Control_t *p) {
+
+}
+
+void OnBtnHtrMinus(const Control_t *p) {
+    if(App.tHtrManual > 30) App.tHtrManual -= 5;
+    ShowTHtrManual(App.tHtrManual);
+}
+void OnBtnHtrPlus(const Control_t *p) {
+    if(App.tHtrManual < HEATER_TOP_T) App.tHtrManual += 5;
+    ShowTHtrManual(App.tHtrManual);
+}
+
 #endif
 
 #if 1 // ======================= Command processing ============================
