@@ -19,4 +19,7 @@ void ShowTime(uint32_t Tms);
 void ShowFanStatus(bool IsOn);
 void ShowTHtrManual(float t);
 
+// Chart
 extern Chart_t Chart;
+extern Series_t SeriesTPcb;
+extern Series_t SeriesTHtr;

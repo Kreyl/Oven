@@ -12,7 +12,7 @@
 #include "ILI9341.h"
 #include "ControlClasses.h"
 
-#define FRAMEBUFFER_LEN             10000   // 100x100
+#define FRAMEBUFFER_LEN             20000   // 200x100
 #define TOUCH_POLLING_PERIOD_MS     18
 
 class Gui_t {

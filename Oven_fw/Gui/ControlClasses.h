@@ -13,7 +13,7 @@
 enum Justify_t { jstLeft, jstCenter, jstRight };
 
 #if 1 // ==== Classes ====
-enum ControlType_t { ctrlBtn, ctrlTextbox, ctrlChart };
+enum ControlType_t { ctrlBtn, ctrlTextbox, ctrlChart, ctrlLine };
 
 // Parent class for all controls
 class Control_t {
@@ -38,6 +38,23 @@ public:
 };
 
 typedef void (*ftEvtCb)(const Control_t *p);
+
+// ==== Lines ====
+class LineHoriz_t : public Control_t {
+public:
+    Color_t Clr;
+    void Draw() const;
+    LineHoriz_t(uint16_t x0, uint16_t y0, uint16_t Len, uint16_t AWidth, Color_t AClr) :
+        Control_t(ctrlLine, x0, y0, Len, AWidth, nullptr, nullptr, clWhite), Clr(AClr) {}
+};
+
+class LineVert_t : public LineHoriz_t {
+public:
+//    Color_t Clr;
+//    void Draw() const;
+    LineVert_t(uint16_t x0, uint16_t y0, uint16_t Len, uint16_t AWidth, Color_t AClr) :
+        LineHoriz_t(x0, y0, AWidth, Len, AClr) {}
+};
 
 // ==== Button ====
 enum BtnState_t {btnPressed, btnReleased};
@@ -85,19 +102,9 @@ public:
 };
 
 // ==== Chart ====
-#define CHART_W_PX      230
-#define CHART_W_MS      600000
-#define CHART_H_PX      200
-#define CHART_TOP       39
-#define CHART_LEFT      0
-#define CHART_BACK_CLR  clBlack
-
-#define SERIES_CNT      2
-#define SERIES_Y_MIN    30
-#define SERIES_Y_MAX    260
-
 #define X_SCALE         ((float)(CHART_W_MS / CHART_W_PX))
-#define Y_SCALE         ((float)CHART_H_PX / (float)(SERIES_Y_MAX - SERIES_Y_MIN))
+
+class Chart_t;
 
 struct Point_t {
     float x, y;
@@ -105,39 +112,37 @@ struct Point_t {
 
 class Series_t {
 private:
-    uint32_t Cnt;
-    float PrevX;
-    uint32_t CurrX;
+    Chart_t *Parent;
 public:
     Color_t Color;
     void AddPoint(float x, float y);
-    void Reset();
-    void Draw();
-    Series_t() :
-        Cnt(0),
-        PrevX(0), CurrX(0),
-        Color(clWhite) {}
+    void Clear();
+    Series_t(Chart_t *AParent, Color_t AClr) :
+        Parent(AParent),
+        Color(AClr) {}
 };
 
 class Chart_t {
 private:
     uint16_t Left, Top, Width, Height;
-    Series_t Series[SERIES_CNT];
+    float Xmin, Xmax, Ymin, Ymax;
+    Color_t ClrBack;
+    uint32_t ScaledY(float y);
+    uint32_t ScaledX(float x);
 public:
-    void Draw();
-    void Reset();
-    void AddPoint(uint32_t SerIndx, float x, float y);
+    void Clear();
     void AddLineHoriz(float y, Color_t AColor);
     void AddLineVert(float x, Color_t AColor);
     Chart_t(uint16_t ALeft, uint16_t ATop, uint16_t AWidth, uint16_t AHeight,
-            Color_t AColor1, Color_t AColor2) :
-        Left(ALeft), Top(ATop), Width(AWidth), Height(AHeight)
-        {
-            Series[0].Color = AColor1;
-            Series[1].Color = AColor2;
-        }
+            float AXmin, float AXmax, float AYmin, float AYmax,
+            Color_t AClrBack) :
+        Left(ALeft), Top(ATop), Width(AWidth), Height(AHeight),
+        Xmin(AXmin), Xmax(AXmax), Ymin(AYmin), Ymax(AYmax),
+        ClrBack(AClrBack) {}
+    friend class Series_t;
 };
 
+// ==== Page ====
 class Page_t {
 public:
     const Control_t **Controls;

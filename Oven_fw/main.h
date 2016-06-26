@@ -16,7 +16,7 @@
 #define APP_NAME            "Oven"
 
 #if 1 // ======== Thermoprofiles ========
-#define T_PRECISION     4.0   // degrees
+#define T_PRECISION     3.0   // degrees
 struct ThermoChunk_t {
     float tEnd;
     uint32_t DurationS;
@@ -55,16 +55,16 @@ private:
     float tHtr, tPCB;
     float CalcTemperature(uint32_t AdcCode);
     uint32_t PwrByHtrCtrl, PwrByPcbCtrl;
-    bool IsOn = false;
-    Mode_t Mode = modeManual;
     void CheckIfFanRequired(float tPCB, float tRequired);
 public:
+    bool IsOn = false;
     float tHtrManual = 180;
+    Mode_t Mode = modeProfile;
+    void SetMode(Mode_t NewMode);
     void LoadProfiles();
     void SaveProfiles();
     void Start();
     void Stop();
-    void OnBtnMode();
     // Eternal methods
     void InitThread() { PThread = chThdGetSelfX(); }
     void SignalEvt(eventmask_t Evt) {

@@ -68,7 +68,11 @@ void Control_t::FillRect(Color_t ClrTop, Color_t ClrBottom) const {
     }
 }
 
-// Button
+// ==== Lines ====
+void LineHoriz_t::Draw() const { Lcd.DrawRect(Left, Top, Width, Height, Clr); }
+//void LineVert_t::Draw()  const { Lcd.DrawRect(Left, Top, Width, Height, Clr); }
+
+// ==== Button ====
 void Button_t::Draw(BtnState_t State) const {
 //    Uart.Printf("%u %u %u %u %S\r", Left, Width, Top, Height, Text);
     if(FBuf.Setup(Width, Height) != OK) {
@@ -97,50 +101,40 @@ void Textbox_t::Draw() const {
 }
 
 // ================================== Chart ====================================
-void Chart_t::Draw() {
-    Lcd.DrawRect(Left, Top, Width, Height, CHART_BACK_CLR);
-    // Chart bounds
-    Lcd.DrawLineVert(CHART_LEFT, CHART_TOP, CHART_H_PX, clWhite);
-    Lcd.DrawLineVert((CHART_LEFT + CHART_W_PX), CHART_TOP, CHART_H_PX, clWhite);
-    Lcd.DrawLineHoriz(CHART_LEFT, (CHART_TOP + CHART_H_PX), CHART_W_PX, clWhite);
-    Lcd.DrawLineHoriz(CHART_LEFT, CHART_TOP, CHART_W_PX, clWhite);
-}
+void Chart_t::Clear() { Lcd.DrawRect(Left, Top, Width, Height, ClrBack); }
 
-void Chart_t::Reset() {
-    for(uint32_t i=0; i<SERIES_CNT; i++) Series[i].Reset();
-    Draw();
+uint32_t Chart_t::ScaledY(float y) {
+    float YmaxPx = Top + Height;
+    float Scale = (float)Height / (Ymax - Ymin);
+    float ys = YmaxPx - (y - Ymin) * Scale;
+    // Restrict result
+    if(ys > YmaxPx) ys = YmaxPx;
+    else if(ys < Top) ys = Top;
+    return (uint32_t)ys;
 }
-
-void Chart_t::AddPoint(uint32_t SerIndx, float x, float y) {
-    Series[SerIndx].AddPoint(x, y);
+uint32_t Chart_t::ScaledX(float x) {
+    float XmaxPx = Left + Width;
+    float Scale = (float)Width / (Xmax - Xmin);
+    float xs = Left + (x - Xmin) * Scale;
+    // Restrict result
+    if(xs > XmaxPx) xs = XmaxPx;
+    else if(xs < Left) xs = Left;
+    return (uint32_t)xs;
 }
 
 void Chart_t::AddLineHoriz(float y, Color_t AColor) {
-    float ym = (CHART_TOP + CHART_H_PX) - (y - SERIES_Y_MIN) * Y_SCALE;
-    Lcd.DrawLineHoriz((CHART_LEFT+1), ym, CHART_W_PX, AColor);
+    Lcd.DrawLineHoriz(Left, ScaledY(y), Width, AColor);
+}
+void Chart_t::AddLineVert(float x, Color_t AColor) {
+    Lcd.DrawLineVert(ScaledX(x), Top, Height, AColor);
 }
 
 
 void Series_t::AddPoint(float x, float y) {
-    // Calculate scaled X
-    if((x - PrevX) >= X_SCALE) {
-        CurrX++;
-        PrevX = x;
-    }
-    if(CurrX < CHART_W_PX) {
-        // Calculate scaled Y
-        float ym = (CHART_TOP + CHART_H_PX) - (y - SERIES_Y_MIN) * Y_SCALE;
-        uint32_t ypx = (uint32_t)ym;
-        if(ypx >= CHART_TOP) Lcd.DrawPoint((CurrX + CHART_LEFT), ypx, Color);
-    }
-//    Uart.Printf("%.1f;%.1f;   %u; %.1f\r", x, y, CurrX, PrevX);
-//    for(int i=0; i<SERIES_LEN; i++) Uart.Printf("%.1f; %.1f\r", IBuf[i].x, IBuf[i].y);
+    Lcd.DrawPoint(Parent->ScaledX(x), Parent->ScaledY(y), Color);
 }
 
-void Series_t::Reset() {
-    Cnt = 0;
-    PrevX = 0;
-    CurrX = 0;
+void Series_t::Clear() {
 //    Uart.Printf("%.1f; %.1f\r", XScale, YScale);
 }
 

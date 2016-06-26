@@ -25,12 +25,13 @@
 #define BTN_MODE_CLR_PRS_BOT    (Color_t){0, 99, 99}
 
 #if 1 // ========================== Global =====================================
+#if 1 // ==== Temperature & time txtboxes ====
 #define TXT_T_H         36
 #define TXT_T_W         75
 #define TXT_T_Y0        0
 #define TXT_TPCB_X0     0
-#define TXT_THTR_X0     (TXT_TPCB_X0 + TXT_T_W + 9)
-#define TXT_TIME_X0     (TXT_THTR_X0 + TXT_T_W + 9)
+#define TXT_THTR_X0     (TXT_TPCB_X0 + TXT_T_W + 4)
+#define TXT_TIME_X0     (TXT_THTR_X0 + TXT_T_W + 4)
 
 static char STPcb[7] = "---";
 const Textbox_t txtTPcb {
@@ -65,26 +66,9 @@ void ShowTime(uint32_t Tms) {
     kl_bufprint(STime, 7, "%u", Tms/1000);
     txtTime.Draw();
 }
+#endif
 
-#define TXT_ONOFF_W     63
-#define TXT_ONOFF_H     36
-#define TXT_ONOFF_X0    (LCD_W - TXT_ONOFF_W)
-
-const Textbox_t txtOn {
-    TXT_ONOFF_X0, 0, TXT_ONOFF_W, TXT_ONOFF_H,
-    "ON", &fntVerdana27x27, clWhite,    // Text
-    clRed                               // Back
-};
-const Textbox_t txtOff {
-    TXT_ONOFF_X0, 0, TXT_ONOFF_W, TXT_ONOFF_H,
-    "OFF", &fntVerdana27x27, clWhite,   // Text
-    (Color_t){0, 45, 00}                // Back
-};
-
-void ShowHeaterOn()  { txtOn.Draw(); }
-void ShowHeaterOff() { txtOff.Draw(); }
-
-// Buttons
+#if 1 // ==== Buttons ====
 #define BTN_W           81
 #define BTN_H           63
 #define BTN_DIST        4
@@ -102,8 +86,42 @@ const Button_t BtnMode {
 };
 #endif
 
+#if 1 // ==== On/Off ====
+#define TXT_ONOFF_W     BTN_W
+#define TXT_ONOFF_H     36
+#define TXT_ONOFF_X0    (LCD_W - TXT_ONOFF_W)
+
+Textbox_t txtOnOff {
+    TXT_ONOFF_X0, 0, TXT_ONOFF_W, TXT_ONOFF_H,
+    "OFF", &fntVerdana27x27, clWhite,   // Text
+    clDarkGreen                         // Back
+};
+
+void ShowHeaterOn()  {
+    txtOnOff.Text = "ON";
+    txtOnOff.ClrBack = clRed;
+    txtOnOff.Draw();
+}
+void ShowHeaterOff() {
+    txtOnOff.Text = "OFF";
+    txtOnOff.ClrBack = clDarkGreen;
+    txtOnOff.Draw();
+}
+#endif
+
+// Lines
+const LineHoriz_t LineTop   { 0, (TXT_T_H + 2), LCD_W, 1, clWhite };
+const LineVert_t  LineRight { (BTN_X0 - 4), 0, LCD_H, 1, clWhite };
+#endif
+
 #if 1 // ========================== Chart ======================================
-Chart_t Chart(0, CHART_TOP, CHART_W_PX, CHART_H_PX, clRed, clLightBlue);
+Chart_t Chart(
+        0, 39, 230, 200,    // Top, Left, Width, Height
+        0, 600000, 30, 240, // Xmin, Xmax, Ymin, Ymax
+        clBlack);           // Back color
+
+Series_t SeriesTPcb(&Chart, clRed);
+Series_t SeriesTHtr(&Chart, clLightBlue);
 #endif
 
 #if 1 // ======================== Page Profile =================================
@@ -129,10 +147,12 @@ const Control_t* PageProfileCtrls[] = {
         (Control_t*)&BtnStart,
         (Control_t*)&BtnStop,
         (Control_t*)&BtnMode,
-        (Control_t*)&txtOff,    // Show OFF txt
+        (Control_t*)&txtOnOff,
         (Control_t*)&txtTPcb,
         (Control_t*)&txtTHtr,
         (Control_t*)&txtTime,
+        (Control_t*)&LineTop,
+        (Control_t*)&LineRight,
 };
 
 const Page_t PageProfile = { PageProfileCtrls, countof(PageProfileCtrls) };
@@ -150,7 +170,7 @@ const Button_t BtnFan {
 };
 
 Textbox_t txtFan {
-    0, (BTN_Y0 + BTN_H + BTN_DIST + 11), 144, TXT_T_H,
+    0, (BTN_Y0 + BTN_H + BTN_DIST + 4), 219, 54,
     "Fan OFF", &fntVerdana27x27, clWhite,     // Text
     (Color_t){0, 45, 00}                     // Back
 };
@@ -166,7 +186,7 @@ void ShowFanStatus(bool IsOn) {
 #define HTR_SETUP_Y0        (BTN_Y0 + 4)
 #define TXT_SETUP_H         54
 #define TXT_SETUP_W         75
-#define BTN_PLUSMINUS_WH    TXT_SETUP_H
+#define BTN_PLUSMINUS_W     63
 
 extern void OnBtnHeater(const Control_t *p);
 extern void OnBtnHtrMinus(const Control_t *p);
@@ -176,7 +196,7 @@ static char STHtrSetup[7] = "180";
 const Textbox_t txtHtrSetup {
     0, HTR_SETUP_Y0, TXT_T_W, TXT_SETUP_H,
     STHtrSetup, &fntVerdana27x27, clWhite,  // Text
-    clLightBlue                             // Back
+    clDarkBlue                             // Back
 };
 
 void ShowTHtrManual(float t) {
@@ -193,18 +213,17 @@ const Button_t BtnHeater {
 };
 
 const Button_t BtnTHtrMinus {
-    (TXT_T_W + 9), HTR_SETUP_Y0, BTN_PLUSMINUS_WH, BTN_PLUSMINUS_WH,
+    (TXT_T_W + 9), HTR_SETUP_Y0, BTN_PLUSMINUS_W, TXT_SETUP_H,
     "-", BTN_FNT, clWhite,
     clLightBlue, clDarkBlue, clDarkBlue, clLightBlue,
     OnBtnHtrMinus
 };
 const Button_t BtnTHtrPlus {
-    (TXT_T_W + 9 + BTN_PLUSMINUS_WH + 9), HTR_SETUP_Y0, BTN_PLUSMINUS_WH, BTN_PLUSMINUS_WH,
+    (TXT_T_W + 9 + BTN_PLUSMINUS_W + 9), HTR_SETUP_Y0, BTN_PLUSMINUS_W, TXT_SETUP_H,
     "+", BTN_FNT, clWhite,
     clLightBlue, clDarkBlue, clDarkBlue, clLightBlue,
     OnBtnHtrPlus
 };
-
 #endif
 
 const Control_t* PageManualCtrls[] = {
@@ -215,6 +234,9 @@ const Control_t* PageManualCtrls[] = {
         (Control_t*)&txtFan,
         (Control_t*)&BtnFan,
         (Control_t*)&BtnMode,
+        (Control_t*)&txtOnOff,
+        (Control_t*)&LineTop,
+        (Control_t*)&LineRight,
 };
 
 const Page_t PageManual = { PageManualCtrls, countof(PageManualCtrls) };

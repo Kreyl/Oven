@@ -16,7 +16,7 @@
 #include "kl_pid.h"
 
 #define MEASURE_PERIOD_MS   100
-#define HEATER_TOP_T        315 // degrees Centigrade
+#define HEATER_TOP_T        300 // degrees Centigrade
 
 App_t App;
 TmrKL_t TmrMeasurement {MS2ST(MEASURE_PERIOD_MS), EVTMSK_MEASURE_TIME, tktPeriodic};
@@ -43,7 +43,7 @@ public:
 
 // Kp,  Ki, MaxI, MinI,  Kd
 PID_t PidHtr {4,  0.1, 300, -300,  80};
-PID_t PidPcb {5,  0.1, 300, -300,  80};
+PID_t PidPcb {4,  0.1, 300, -300,  80};
 
 const PinOutputPWM_t Heater(HEATER_SETUP);
 const PinOutputPWM_t Fan(FAN_SETUP);
@@ -53,9 +53,9 @@ extern MCP3551_t AdcPCB;
 AdcFilter_t<10> HtrFilter, PcbFilter;
 
 ThermoProfile_t TProfile = {
-        { 140, 60 },
-        { 170, 90 },
-        { 190, 30 },
+        { 130, 1  },    // Preheat zone: t end = 120...150 dg
+        { 130, 99 },    // Activation zone: 120...150 dg
+        { 170, 36 },    // Reflow zone: 200...230 dg
         { 80,  20 }
 };
 
@@ -91,7 +91,7 @@ int main(void) {
 //    App.LoadProfiles();
 
     Gui.Init();
-    Gui.DrawPage(1);
+    App.SetMode(modeProfile);
 
     AdcHeater.Init();
     AdcPCB.Init();
@@ -132,17 +132,21 @@ void App_t::ITask() {
                 tHtr = CalcTemperature(HtrFilter.GetFiltered());
     //            Uart.Printf("t=%.1f\r", tHeater);
                 float PwrPercent = PidHtr.Calculate(tHtr);
-                if(PwrPercent >= 0) {
+                if(PwrPercent >= 0 and IsOn) {
                     PwrByHtrCtrl = (uint32_t)(PwrPercent / 2);   // Granulation 2%
                     PwrByHtrCtrl *= 200;  // 0%...100% -> 0...10000
-                    // Select lower pwr setting
-                    uint32_t Pwr = (PwrByPcbCtrl < PwrByHtrCtrl)? PwrByPcbCtrl : PwrByHtrCtrl;
-                    Heater.Set(Pwr);
+                    if(Mode == modeProfile) {
+                        // Select lower pwr setting
+                        uint32_t Pwr = (PwrByPcbCtrl < PwrByHtrCtrl)? PwrByPcbCtrl : PwrByHtrCtrl;
+                        Heater.Set(Pwr);
+                    }
+                    else Heater.Set(PwrByHtrCtrl);
                 }
                 else {
                     PwrByHtrCtrl = 0;
                     Heater.Set(0);
                 }
+                ShowTHtr(tHtr);
             } // if filter done
         }
 
@@ -150,43 +154,49 @@ void App_t::ITask() {
             if(PcbFilter.PutNewAndCheck(AdcPCB.LastData) == OK) {
                 tPCB = CalcTemperature(PcbFilter.GetFiltered());
                 uint32_t TimemS = (chVTGetSystemTimeX() - TimeStart) / 10;
-                float PwrPercent = 0;
-                if(IsOn) {
-        //            Uart.Printf("Pcb: %.1f\r", tPCB);
-                    float tToSet;
-                    if(TProfile.CalcTargetT(TimemS, tPCB, &tToSet) == LAST) App.Stop();
-                    else { // OK or NEW, i.e. proceed
-                        if(tToSet != PidPcb.TargetValue) {
-                            PidPcb.TargetValue = tToSet;
-                            Chart.AddLineHoriz(tToSet, clGrey);
-                        }
-                        PwrPercent = PidPcb.Calculate(tPCB);
-                        if(PwrPercent >= 0) {
-                            PwrByPcbCtrl = (uint32_t)(PwrPercent / 2);   // Granulation 2%
-                            PwrByPcbCtrl *= 200;  // 0%...100% -> 0...10000
-                            // Select lower pwr setting
-                            uint32_t Pwr = (PwrByPcbCtrl < PwrByHtrCtrl)? PwrByPcbCtrl : PwrByHtrCtrl;
-                            Heater.Set(Pwr);
-                        }
-                        else {
-                            PwrByPcbCtrl = 0;
-                            Heater.Set(0);
-                        }
-                        CheckIfFanRequired(tPCB, tToSet);   // Fan
-                    } // ret == OK
-                } // if on
+                if(Mode == modeProfile) {
+                    float PwrPercent = 0;
+                    if(IsOn) {
+            //            Uart.Printf("Pcb: %.1f\r", tPCB);
+                        uint8_t Rslt = TProfile.CalcTargetT(TimemS, tPCB, &PidPcb.TargetValue);
+                        if(Rslt == LAST) App.Stop();
+                        else { // OK or NEW, i.e. proceed
+                            if(Rslt == NEW) {
+                                Chart.AddLineHoriz(PidPcb.TargetValue, clGrey);
+                                Chart.AddLineVert(TimemS, clGrey);
+                            }
+                            PwrPercent = PidPcb.Calculate(tPCB);
+                            if(PwrPercent >= 0) {
+                                PwrByPcbCtrl = (uint32_t)(PwrPercent / 2);   // Granulation 2%
+                                PwrByPcbCtrl *= 200;  // 0%...100% -> 0...10000
+                                // Select lower pwr setting
+                                uint32_t Pwr = (PwrByPcbCtrl < PwrByHtrCtrl)? PwrByPcbCtrl : PwrByHtrCtrl;
+                                Heater.Set(Pwr);
+                            }
+                            else {
+                                PwrByPcbCtrl = 0;
+                                Heater.Set(0);
+                            }
+                            CheckIfFanRequired(tPCB, PidPcb.TargetValue);   // Fan
+                        } // ret == OK
+                    } // if on
+                    else {
+                        PwrByPcbCtrl = 0;
+                        Heater.Set(0);
+                    }
+                    Uart.Printf("%u; %.1f; %.1f;  %.1f; %.1f\r\n", TimemS, tPCB, tHtr, PidPcb.TargetValue, PwrPercent);
+                } // if modeProfile
                 else {
-                    PwrByPcbCtrl = 0;
-                    Heater.Set(0);
+                    Uart.Printf("%u; %.1f; %.1f\r\n", TimemS, tPCB, tHtr);
                 }
+
                 // Show everything
-                Uart.Printf("%u; %.1f; %.1f; %.1f\r\n", TimemS, tPCB, tHtr, PwrPercent);
                 ShowTPcb(tPCB);
-                ShowTHtr(tHtr);
+
                 if(Mode == modeProfile) {
                     if(IsOn) ShowTime(TimemS);
-                    Chart.AddPoint(0, TimemS, tPCB);
-                    Chart.AddPoint(1, TimemS, tHtr);
+                    SeriesTPcb.AddPoint(TimemS, tPCB);
+                    SeriesTHtr.AddPoint(TimemS, tHtr);
                 }
             } // if filter done
         }
@@ -228,21 +238,38 @@ void App_t::CheckIfFanRequired(float tPCB, float tRequired) {
 
 void App_t::Start() {
     Fan.Set(0);
-    TProfile.Reset();
     ShowHeaterOn();
-    Chart.Reset();
     IsOn = true;
-    //Chart.AddLineHoriz(WorkTarget, clGrey);
     TimeStart = chVTGetSystemTimeX();      // reset time counter
+    if(Mode == modeProfile) {
+        TProfile.Reset();
+        Chart.Clear();
+        PidHtr.TargetValue = HEATER_TOP_T;
+    }
+    else {
+        PidHtr.TargetValue = tHtrManual;
+    }
 }
 void App_t::Stop() {
-    PidPcb.TargetValue = 0;
     ShowHeaterOff();
     Fan.Set(0);
     IsOn = false;
+    if(Mode == modeProfile) {
+        PidPcb.TargetValue = 0;
+    }
+    else {
+        PidHtr.TargetValue = 0;
+    }
 }
 
-// Thermoprofile
+void App_t::SetMode(Mode_t NewMode) {
+    Stop();
+    Mode = NewMode;
+    if(Mode == modeManual) Gui.DrawPage(1);
+    else Gui.DrawPage(0);
+}
+
+// ============================== Thermoprofile ================================
 uint8_t ThermoProfile_t::CalcTargetT(uint32_t TimemS, float CurrT, float *TargetT) {
     uint8_t Rslt = OK;
     if(TargetReached) {
@@ -276,16 +303,9 @@ void OnBtnStart(const Control_t *p) {
 void OnBtnStop(const Control_t *p) {
     App.Stop();
 }
-void OnBtnMode(const Control_t *p) { App.OnBtnMode(); }
-void App_t::OnBtnMode() {
-    if(Mode == modeProfile) {
-        Mode = modeManual;
-        Gui.DrawPage(1);
-    }
-    else {
-        Mode = modeProfile;
-        Gui.DrawPage(0);
-    }
+void OnBtnMode(const Control_t *p) {
+    if(App.Mode == modeProfile) App.SetMode(modeManual);
+    else App.SetMode(modeProfile);
 }
 
 void OnBtnFan(const Control_t *p) {
@@ -303,16 +323,19 @@ void OnBtnFan(const Control_t *p) {
 
 // Manual heater control
 void OnBtnHeater(const Control_t *p) {
-
+    if(App.IsOn) App.Stop();
+    else App.Start();
 }
 
 void OnBtnHtrMinus(const Control_t *p) {
     if(App.tHtrManual > 30) App.tHtrManual -= 5;
     ShowTHtrManual(App.tHtrManual);
+    PidHtr.TargetValue = App.tHtrManual;
 }
 void OnBtnHtrPlus(const Control_t *p) {
     if(App.tHtrManual < HEATER_TOP_T) App.tHtrManual += 5;
     ShowTHtrManual(App.tHtrManual);
+    PidHtr.TargetValue = App.tHtrManual;
 }
 
 #endif
