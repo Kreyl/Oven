@@ -12,7 +12,7 @@
 
 extern FrameBuffer_t<uint16_t, FRAMEBUFFER_LEN> FBuf;
 
-// ==== Common ====
+#if 1 // ==== Common ====
 void DrawText(uint16_t Left, uint16_t Top, uint16_t Width, uint16_t Height,
         const char* S, PFont_t Font, Justify_t Justify, Color_t ClrFront) {
     // String width
@@ -51,6 +51,26 @@ void DrawText(uint16_t Left, uint16_t Top, uint16_t Width, uint16_t Height,
     } // while
 }
 
+void PrintInt(uint16_t Left, uint16_t Top,
+        int32_t N, PFont_t Font, Justify_t Justify, Color_t ClrFront,
+        Color_t ClrBack) {
+    char S[12];
+    kl_bufprint(S, 7, "%d", N);
+    uint32_t w = Font->GetStringWidth(S), h = Font->Height;
+    if(FBuf.Setup(w, h) == OK) {
+        // Fill rect
+        uint16_t Color565 = ClrBack.RGBTo565();
+        for(uint32_t iy=0; iy<h; iy++) {
+            for(uint32_t ix=0; ix<w; ix++) FBuf.Put(ix, iy, Color565);
+        }
+        // Text
+        DrawText(Left, Top, w, h, S, Font, Justify, ClrFront);
+        Lcd.FillWindow(Left, Top, w, h, FBuf.Buf);
+    }
+}
+
+#endif
+
 void Control_t::FillRect(Color_t ClrTop, Color_t ClrBottom) const {
     if(ClrTop == ClrBottom) {
         uint16_t Color565 = ClrTop.RGBTo565();
@@ -70,7 +90,6 @@ void Control_t::FillRect(Color_t ClrTop, Color_t ClrBottom) const {
 
 // ==== Lines ====
 void LineHoriz_t::Draw() const { Lcd.DrawRect(Left, Top, Width, Height, Clr); }
-//void LineVert_t::Draw()  const { Lcd.DrawRect(Left, Top, Width, Height, Clr); }
 
 // ==== Button ====
 void Button_t::Draw(BtnState_t State) const {
@@ -86,7 +105,7 @@ void Button_t::Draw(BtnState_t State) const {
     Lcd.FillWindow(Left, Top, Width, Height, FBuf.Buf);
 }
 
-// Textbox
+// ==== Textbox ====
 void Textbox_t::Draw() const {
 //    Uart.Printf("%u %u %u %u %S\r", Left, Width, Top, Height, Text);
     if(FBuf.Setup(Width, Height) != OK) {
@@ -123,10 +142,14 @@ uint32_t Chart_t::ScaledX(float x) {
 }
 
 void Chart_t::AddLineHoriz(float y, Color_t AColor) {
-    Lcd.DrawLineHoriz(Left, ScaledY(y), Width, AColor);
+    uint32_t ys = ScaledY(y);
+    Lcd.DrawLineHoriz(Left, ys, Width, AColor);
+    PrintInt(0, ys-Font->Height, (int32_t)y, Font, jstLeft, ClrText, ClrBack);
 }
 void Chart_t::AddLineVert(float x, Color_t AColor) {
-    Lcd.DrawLineVert(ScaledX(x), Top, Height, AColor);
+    uint32_t xs = ScaledX(x);
+    Lcd.DrawLineVert(xs, Top, Height, AColor);
+    PrintInt(xs+1, Top+Height-Font->Height, (int32_t)(x / 1000), Font, jstLeft, ClrText, ClrBack);
 }
 
 

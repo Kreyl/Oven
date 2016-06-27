@@ -43,7 +43,7 @@ public:
 
 // Kp,  Ki, MaxI, MinI,  Kd
 PID_t PidHtr {4,  0.1, 300, -300,  80};
-PID_t PidPcb {4,  0.1, 300, -300,  80};
+PID_t PidPcb {5,  0.05, 300, -300,  80};
 
 const PinOutputPWM_t Heater(HEATER_SETUP);
 const PinOutputPWM_t Fan(FAN_SETUP);
@@ -158,18 +158,22 @@ void App_t::ITask() {
                     float PwrPercent = 0;
                     if(IsOn) {
             //            Uart.Printf("Pcb: %.1f\r", tPCB);
-                        uint8_t Rslt = TProfile.CalcTargetT(TimemS, tPCB, &PidPcb.TargetValue);
-                        if(Rslt == LAST) App.Stop();
-                        else { // OK or NEW, i.e. proceed
-                            if(Rslt == NEW) {
+                        ProfileRslt_t Rslt = TProfile.CalcTargetT(TimemS, tPCB, &PidPcb.TargetValue);
+                        if(Rslt == tprStop) App.Stop();
+                        else {  // New or proceeding
+                            // Draw lines if new
+                            if(Rslt == tprNew) {
                                 Chart.AddLineHoriz(PidPcb.TargetValue, clGrey);
-                                Chart.AddLineVert(TimemS, clGrey);
+                                if(TProfile.State != pstPreheat) Chart.AddLineVert(TimemS, clGrey);
                             }
-                            PwrPercent = PidPcb.Calculate(tPCB);
+                            // Heat if not cooling
+                            if(TProfile.State == pstCooling) PwrPercent = 0;
+                            else PwrPercent = PidPcb.Calculate(tPCB);
+                            // Process pwr control
                             if(PwrPercent >= 0) {
                                 PwrByPcbCtrl = (uint32_t)(PwrPercent / 2);   // Granulation 2%
                                 PwrByPcbCtrl *= 200;  // 0%...100% -> 0...10000
-                                // Select lower pwr setting
+                                // Select lowest pwr setting
                                 uint32_t Pwr = (PwrByPcbCtrl < PwrByHtrCtrl)? PwrByPcbCtrl : PwrByHtrCtrl;
                                 Heater.Set(Pwr);
                             }
@@ -270,29 +274,36 @@ void App_t::SetMode(Mode_t NewMode) {
 }
 
 // ============================== Thermoprofile ================================
-uint8_t ThermoProfile_t::CalcTargetT(uint32_t TimemS, float CurrT, float *TargetT) {
-    uint8_t Rslt = OK;
-    if(TargetReached) {
-        uint32_t Ts = TimemS / 1000;
-        Ts -= TimeStart;
+ProfileRslt_t ThermoProfile_t::CalcTargetT(uint32_t TimemS, float CurrT, float *TargetT) {
+    ProfileRslt_t Rslt = tprProceeding;
+    if(TargetReached) { // If required temperature was reached
+        uint32_t DurationForNow = TimemS / 1000 - TimeStart;
         // Check if time to go to next chunk
-        if(Ts >= Curr->DurationS) {
-            if(Curr == &Cooling) Rslt = LAST;  // cooling completed
+        if(DurationForNow >= Chunk[State].DurationS) {
+            if(State == pstCooling) Rslt = tprStop;  // cooling completed
             else {
-                Curr++;
+                // Switch to next chunk
+                State = (ProfileState_t)((int)State + 1);
                 TargetReached = false;
-                Rslt = NEW;
-            } // if not curr
-        } // if enough time
+                Rslt = tprNew;
+            } // if not cooling
+        } // if duration
     } // if reached
     else {
-        if(CurrT >= (Curr->tEnd - T_PRECISION) and CurrT <= (Curr->tEnd + T_PRECISION)) {
+        float tEnd = Chunk[State].tEnd;
+        if( (State == pstCooling and CurrT <= tEnd) or  // When cooling, precision is not required
+            (State != pstCooling and CurrT >= (tEnd - T_PRECISION) and CurrT <= (tEnd + T_PRECISION))) {
             // Target temperature reached
             TargetReached = true;
             TimeStart = TimemS / 1000;  // Start time count
         }
     }
-    *TargetT = Curr->tEnd;
+    *TargetT = Chunk[State].tEnd;
+    // Send new after beginning
+    if(JustResetted) {
+        JustResetted = false;
+        Rslt = tprNew;
+    }
     return Rslt;
 }
 

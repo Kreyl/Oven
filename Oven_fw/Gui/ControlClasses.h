@@ -126,7 +126,8 @@ class Chart_t {
 private:
     uint16_t Left, Top, Width, Height;
     float Xmin, Xmax, Ymin, Ymax;
-    Color_t ClrBack;
+    PFont_t Font;
+    Color_t ClrText, ClrBack;
     uint32_t ScaledY(float y);
     uint32_t ScaledX(float x);
 public:
@@ -135,9 +136,11 @@ public:
     void AddLineVert(float x, Color_t AColor);
     Chart_t(uint16_t ALeft, uint16_t ATop, uint16_t AWidth, uint16_t AHeight,
             float AXmin, float AXmax, float AYmin, float AYmax,
+            PFont_t AFont, Color_t AClrText,
             Color_t AClrBack) :
         Left(ALeft), Top(ATop), Width(AWidth), Height(AHeight),
         Xmin(AXmin), Xmax(AXmax), Ymin(AYmin), Ymax(AYmax),
+        Font(AFont), ClrText(AClrText),
         ClrBack(AClrBack) {}
     friend class Series_t;
 };

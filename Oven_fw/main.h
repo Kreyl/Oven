@@ -22,27 +22,35 @@ struct ThermoChunk_t {
     uint32_t DurationS;
 };
 
+enum ProfileRslt_t { tprNew, tprProceeding, tprStop };
+enum ProfileState_t { pstPreheat=0, pstActivation=1, pstReflow=2, pstCooling=3 };
+
 class ThermoProfile_t {
 private:
-    ThermoChunk_t Preheat, Soak, Reflow, Cooling;
+    ThermoChunk_t Chunk[4];
     bool TargetReached;
     uint32_t TimeStart;
-    ThermoChunk_t *Curr;
+    bool JustResetted;
 public:
-    uint8_t CalcTargetT(uint32_t TimemS, float CurrT, float *TargetT);
+    ProfileRslt_t CalcTargetT(uint32_t TimemS, float CurrT, float *TargetT);
+    ProfileState_t State;
     void Reset() {
-        Curr = &Preheat;
+        State = pstPreheat;
         TargetReached = false;
+        JustResetted = true;
     }
     ThermoProfile_t(
             ThermoChunk_t APreheat,
-            ThermoChunk_t ASoak,
+            ThermoChunk_t AActivation,
             ThermoChunk_t AReflow,
             ThermoChunk_t ACooling) :
-                Preheat(APreheat), Soak(ASoak), Reflow(AReflow), Cooling(ACooling),
-                TargetReached(false), TimeStart(0),
-                Curr(&Preheat)
-    {}
+                TargetReached(false), TimeStart(0), JustResetted(true), State(pstPreheat)
+    {
+        Chunk[pstPreheat]    = APreheat;
+        Chunk[pstActivation] = AActivation;
+        Chunk[pstReflow]     = AReflow;
+        Chunk[pstCooling]    = ACooling;
+    }
 };
 #endif
 

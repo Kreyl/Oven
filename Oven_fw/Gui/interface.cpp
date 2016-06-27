@@ -6,6 +6,7 @@
  */
 
 #include "fnt_Verdana27x27.h"
+#include "fnt_Tahoma10x11.h"
 #include "ControlClasses.h"
 #include "kl_lib.h"
 #include "kl_sprintf.h"
@@ -116,9 +117,11 @@ const LineVert_t  LineRight { (BTN_X0 - 4), 0, LCD_H, 1, clWhite };
 
 #if 1 // ========================== Chart ======================================
 Chart_t Chart(
-        0, 39, 230, 200,    // Top, Left, Width, Height
-        0, 600000, 30, 240, // Xmin, Xmax, Ymin, Ymax
-        clBlack);           // Back color
+        0, 39, 230, 200,            // Top, Left, Width, Height
+        0, 600000, 30, 240,         // Xmin, Xmax, Ymin, Ymax
+        &fntTahoma10x11, clWhite,   // Text
+        clBlack                     // Back color
+        );
 
 Series_t SeriesTPcb(&Chart, clRed);
 Series_t SeriesTHtr(&Chart, clLightBlue);
